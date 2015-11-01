@@ -15,7 +15,7 @@
 LogSystem::LogSystem() {
   LOG_FILE = "log.log";
   LOG_VERBOSE_TYPE = LOG_VERBOSE_FULL;
-  PROGRAM_VERBOSE_LEVEL = 0;
+  PROGRAM_VERBOSE_LEVEL = VERBOSE_LEVEL_LOW;
 }
 
 LogSystem::~LogSystem() {
@@ -57,7 +57,7 @@ std::string LogSystem::GenerateErrorMessage(uint32_t error_type,
     std::stringstream ss;
     ss << std::string("#") << std::string(error_type_as_string)
     << std::string(": ") << "Memory assertion failure. Possible cause - not enough memory or memory not allocated.";
-    Log(SEVERITY_INT_FATAL, __FUNCTION__, ss.str());
+    Error(SEVERITY_INT_FATAL, __FUNCTION__, ss.str());
 
     return ((std::string) "");
   }
@@ -139,9 +139,10 @@ int LogSystem::WriteLog(std::string log_entry, bool always_output_to_std) {
   return 0;
 }
 
-int LogSystem::Log(int severity, std::string function, std::string message) {
+int LogSystem::Error(int severity, std::string function, std::string message) {
   std::string timestamp = GetUTCTime();
-  bool is_critical = (severity == SEVERITY_INT_ERROR || severity == SEVERITY_INT_FATAL);
+  // bool is_critical = (severity == SEVERITY_INT_ERROR || severity == SEVERITY_INT_FATAL);
+  bool is_critical = (severity == SEVERITY_INT_FATAL);
 
   const char *severity_lookup[] = {"INFO", "WARNING", "ERROR", "FATAL"};
 
@@ -172,7 +173,7 @@ int LogSystem::Log(int severity, std::string function, std::string message) {
 //                                         true,
 //                                         FormatString(""));
 
-int LogSystem::VerboseLog(uint32_t verbose_level, bool trigger_condition, std::string message, std::string message_header) {
+int LogSystem::Log(uint32_t verbose_level, bool trigger_condition, std::string message, std::string message_header) {
 
   if (trigger_condition == false)
     return 1;
@@ -182,13 +183,6 @@ int LogSystem::VerboseLog(uint32_t verbose_level, bool trigger_condition, std::s
   if ((PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_DEBUG) == 0 && (verbose_level & VERBOSE_LEVEL_DEBUG) != 0) {
     return 2;
   }
-
-  // Second security check.
-  #ifdef RELEASE_VERSION
-    if ((verbose_level & VERBOSE_LEVEL_DEBUG) != 0) {
-      return 3;
-    }
-  #endif
 
   FILE *fp = stderr;
 
@@ -218,8 +212,9 @@ int LogSystem::VerboseLog(uint32_t verbose_level, bool trigger_condition, std::s
   if (((verbose_level & VERBOSE_LEVEL_LOW) && (PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_LOW)) ||
       ((verbose_level & VERBOSE_LEVEL_MED) && (PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_MED)) ||
       ((verbose_level & VERBOSE_LEVEL_HIGH) && (PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_HIGH))) {
-    if ((PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_DEBUG) ||      // In debug mode output everything.
-        ((PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_DEBUG) == (verbose_level & VERBOSE_LEVEL_DEBUG))) { //Otherwise, only output those that aren't debug messages.
+    // if ((PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_DEBUG) ||      // In debug mode output everything.
+    //     ((PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_DEBUG) == (verbose_level & VERBOSE_LEVEL_DEBUG))) { //Otherwise, only output those that aren't debug messages.
+    if (((PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_DEBUG) == (verbose_level & VERBOSE_LEVEL_DEBUG))) { //Otherwise, only output those that aren't debug messages.
       if (message_header == "[]") {
         fprintf (fp, "%s", message.c_str());
       }
@@ -252,7 +247,7 @@ void LogSystem::SetProgramVerboseLevelFromInt(int64_t verbose_level) {
     PROGRAM_VERBOSE_LEVEL = VERBOSE_LEVEL_ALL | VERBOSE_FREQ_MED;
   else if (verbose_level == 5)
     PROGRAM_VERBOSE_LEVEL = VERBOSE_LEVEL_ALL | VERBOSE_FREQ_HIGH;
-#ifndef RELEASE_VERSION
+
   else if (verbose_level == 6)
     PROGRAM_VERBOSE_LEVEL = VERBOSE_LEVEL_LOW | VERBOSE_LEVEL_DEBUG | VERBOSE_FREQ_ALL;
   else if (verbose_level == 7)
@@ -261,7 +256,7 @@ void LogSystem::SetProgramVerboseLevelFromInt(int64_t verbose_level) {
     PROGRAM_VERBOSE_LEVEL = VERBOSE_LEVEL_HIGH | VERBOSE_LEVEL_DEBUG | VERBOSE_FREQ_ALL;
   else if (verbose_level == 9)
     PROGRAM_VERBOSE_LEVEL = VERBOSE_LEVEL_ALL | VERBOSE_LEVEL_DEBUG | VERBOSE_FREQ_ALL;
-#endif
+
   else
     PROGRAM_VERBOSE_LEVEL = VERBOSE_LEVEL_ALL | VERBOSE_FREQ_ALL;
 }
