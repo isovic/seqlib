@@ -30,7 +30,7 @@ INCLUDE = -I"./src/" -I"/usr/include/"
 CC_FLAGS_DEBUG = -O0 -g -rdynamic -c -fmessage-length=0 -ffreestanding -fopenmp -m64 -std=c++11 -Werror=return-type -pthread -march=native
 CC_FLAGS_RELEASE = -O3 -fdata-sections -ffunction-sections -c -fmessage-length=0 -ffreestanding -fopenmp -m64 -std=c++11 -Werror=return-type -pthread -march=native
 LD_FLAGS = -static-libgcc -static-libstdc++ -m64 -ffreestanding
-LD_LIBS = -lpthread -lgomp -lm -lz -ldivsufsort64
+LD_LIBS = -lpthread -lgomp -lm -lz
 
 
 
