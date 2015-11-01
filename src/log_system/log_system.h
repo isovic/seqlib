@@ -23,7 +23,7 @@
 
 // ErrorReporting class is used to standardize the error reporting process.
 // Sample usage:
-//    LOG(FATAL) << ErrorHandling::GenerateErrorMessage(ERR_MEMORY, "Parameter that caused the crash: fp = %ld", (int64_t) fp);
+//    LOG(FATAL) << LogSystem::GenerateErrorMessage(ERR_MEMORY, "Parameter that caused the crash: fp = %ld", (int64_t) fp);
 //
 class LogSystem {
  public:

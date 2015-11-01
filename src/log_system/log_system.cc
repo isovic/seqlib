@@ -13,8 +13,8 @@
 //extern uint32_t LOG_VERBOSE_TYPE;
 
 LogSystem::LogSystem() {
-  LOG_FILE = "graphmap.log";
-  LOG_VERBOSE_TYPE = 0;
+  LOG_FILE = "log.log";
+  LOG_VERBOSE_TYPE = LOG_VERBOSE_FULL;
   PROGRAM_VERBOSE_LEVEL = 0;
 }
 

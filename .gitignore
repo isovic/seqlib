@@ -2,3 +2,4 @@ obj_linux/
 obj_debug/
 obj_mac/
 bin/
+*.log
