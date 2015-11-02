@@ -27,8 +27,8 @@ LIB_DIRS = -L"/usr/local/lib"
 CC_LIBS = -static-libgcc -static-libstdc++ -D__cplusplus=201103L
 INCLUDE = -I"./src/" -I"/usr/include/"
 
-CC_FLAGS_DEBUG = -O0 -g -rdynamic -c -fmessage-length=0 -ffreestanding -fopenmp -m64 -std=c++11 -Werror=return-type -pthread -march=native
-CC_FLAGS_RELEASE = -O3 -fdata-sections -ffunction-sections -c -fmessage-length=0 -ffreestanding -fopenmp -m64 -std=c++11 -Werror=return-type -pthread -march=native
+CC_FLAGS_DEBUG = -DTEST_SEQ_LIB_ -O0 -g -rdynamic -c -fmessage-length=0 -ffreestanding -fopenmp -m64 -std=c++11 -Werror=return-type -pthread -march=native
+CC_FLAGS_RELEASE = -DTEST_SEQ_LIB_ -O3 -fdata-sections -ffunction-sections -c -fmessage-length=0 -ffreestanding -fopenmp -m64 -std=c++11 -Werror=return-type -pthread -march=native
 LD_FLAGS = -static-libgcc -static-libstdc++ -m64 -ffreestanding
 LD_LIBS = -lpthread -lgomp -lm -lz
 

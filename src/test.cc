@@ -1,3 +1,7 @@
+/// This will only get compiled if -DTEST_SEQ_LIB_ is passed to the compiler.
+/// Otherwise, the test file will be skipped, not causing compile time errors for the program including this library.
+#ifdef TEST_SEQ_LIB_
+
 #include <stdio.h>
 #include "sequences/sequence_file.h"
 #include "log_system/log_system.h"
@@ -18,7 +22,9 @@ int main() {
 	printf ("\n");
 
 	LogSystem::GetInstance().SetProgramVerboseLevelFromInt(VERBOSE_LEVEL_LOW | VERBOSE_LEVEL_DEBUG);
-	LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL, true, FormatString("Example of how to write to a log file!\n"), "LogExample");
+	LogSystem::GetInstance().WriteLog("Example of how to directly write to a log file!", true);
+	LogSystem::GetInstance().WriteLog("This gets written to file but not to stderr, but only in case (LogSystem::LOG_VERBOSE_TYPE & LOG_VERBOSE_STD) == 0.", false);
+	LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL, true, FormatString("Example of how to write to stderr."), "LogExample");
 	LogSystem::GetInstance().Log(VERBOSE_LEVEL_MED, true, FormatString("This message will only get displayed on a medium verbose level.\n"), "LogExample");
 	LogSystem::GetInstance().Log(VERBOSE_LEVEL_HIGH, true, FormatString("This message will only get displayed on a high verbose level.\n"), "LogExample");
 	LogSystem::GetInstance().Log(VERBOSE_LEVEL_LOW | VERBOSE_LEVEL_DEBUG, true, FormatString("This message will only get displayed on a low debug verbose level.\n"), "LogExample");
@@ -31,3 +37,5 @@ int main() {
 
 	return 0;
 }
+
+#endif
