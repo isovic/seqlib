@@ -94,6 +94,7 @@ void PrintSubstring(char *text, int64_t length, FILE *fp=stdout);
 std::string GetSubstring(char *text, int64_t length);
 unsigned char* CreateReverseCopy(const unsigned char* seq, uint64_t length);
 std::string TrimToFirstSpace(std::string original_string);
+std::string ConvertToBinary(uint64_t decimal);
 
 // Calculates the sigmoid function with given parameters.
 // S(t) = 1.0f / (1.0f + exp(-t));

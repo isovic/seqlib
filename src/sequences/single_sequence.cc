@@ -537,6 +537,7 @@ void SingleSequence::CopyFrom(const SingleSequence &op1) {
   this->InitQuality(op1.quality_, op1.quality_length_);
 
   this->sequence_id_ = op1.sequence_id_;
+  this->sequence_absolute_id_ = op1.sequence_absolute_id_;
   this->data_format_ = op1.data_format_;
 }
 

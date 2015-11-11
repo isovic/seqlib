@@ -5,7 +5,7 @@
  *      Author: ivan
  */
 
-#include "log_system/log_system.h"
+#include "log_system.h"
 #include <sstream>
 //#include <glog/logging.h>
 //#include <glog/log_severity.h>
@@ -212,9 +212,9 @@ int LogSystem::Log(uint32_t verbose_level, bool trigger_condition, std::string m
   if (((verbose_level & VERBOSE_LEVEL_LOW) && (PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_LOW)) ||
       ((verbose_level & VERBOSE_LEVEL_MED) && (PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_MED)) ||
       ((verbose_level & VERBOSE_LEVEL_HIGH) && (PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_HIGH))) {
-    // if ((PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_DEBUG) ||      // In debug mode output everything.
-    //     ((PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_DEBUG) == (verbose_level & VERBOSE_LEVEL_DEBUG))) { //Otherwise, only output those that aren't debug messages.
-    if (((PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_DEBUG) == (verbose_level & VERBOSE_LEVEL_DEBUG))) { //Otherwise, only output those that aren't debug messages.
+     if ((PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_DEBUG) ||      // In debug mode output everything.
+         ((PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_DEBUG) == (verbose_level & VERBOSE_LEVEL_DEBUG))) { //Otherwise, only output those that aren't debug messages.
+//    if (((PROGRAM_VERBOSE_LEVEL & VERBOSE_LEVEL_DEBUG) == (verbose_level & VERBOSE_LEVEL_DEBUG))) { //Otherwise, only output those that aren't debug messages.
       if (message_header == "[]") {
         fprintf (fp, "%s", message.c_str());
       }

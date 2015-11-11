@@ -370,3 +370,34 @@ int GetClippingOpsFromCigar(const std::string &cigar, char *clip_op_front, int64
 
   return 0;
 }
+
+std::string ConvertToBinary(uint64_t decimal) {
+  std::stringstream ss;
+  int64_t num_digits = 0;
+//  if (decimal == 0)
+//    ss << "0";
+  while (decimal > 0) {
+    ss << ((char) ((decimal % 2) + ((char) '0')));
+    decimal /= 2;
+    if (decimal > 0 && (num_digits + 1) % 4 == 0)
+      ss << " ";
+    num_digits += 1;
+  }
+
+  if (ss.str().size() < (64 + 15) && (num_digits) % 4 == 0)
+    ss << " ";
+
+//  for (int64_t i=0; i<(4 - (num_digits) % 4) && ((num_digits) % 4) != 0; i++)
+//    ss << "0";
+  while (ss.str().size() < (64 + 15)) {
+    ss << '0';
+    if (ss.str().size() < (64 + 15) && (num_digits + 1) % 4 == 0)
+      ss << " ";
+    num_digits += 1;
+  }
+
+  std::string binary = ss.str();
+  std::reverse(binary.begin(), binary.end());
+//  binary = std::string("(MSB) ") + binary + std::string(" (LSB)");
+  return binary;
+}

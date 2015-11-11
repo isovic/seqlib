@@ -126,6 +126,7 @@ class SequenceFile {
   //                        this parameter by the size of the last loaded
   //                        sequence. If the parameter's value is bigger
   //                        than the file size, the entire file will be loaded.
+  //                        If 0, the entire dataset will be loaded.
   // Return:
   //    Returns 0 if successful, -1 if no more sequences can be loaded
   //    (i.e. EOF), and otherwise if unsuccessful.
@@ -163,6 +164,9 @@ class SequenceFile {
   void set_current_batch_starting_sequence_id(uint64_t currentBatchStartingSequenceId) {
     current_batch_starting_sequence_id_ = currentBatchStartingSequenceId;
   }
+
+  uint64_t get_current_batch_id() const;
+  void set_current_batch_id(uint64_t currentBatchId);
 
  private:
   SequenceVector sequences_;  // Vector holding all the sequences in the file (or in a batch).

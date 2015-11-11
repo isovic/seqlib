@@ -275,6 +275,8 @@ int SequenceFile::LoadNextBatchNSequences(uint64_t num_seqs_to_load, bool random
   int32_t l;
   uint64_t id = 0;
   uint64_t id_absolute = current_batch_starting_sequence_id_;
+  printf ("---> current_batch_starting_sequence_id_ = %ld\n", current_batch_starting_sequence_id_);
+  fflush(stdout);
   SingleSequence *sequence = NULL;
 
   while ((l = kseq_read(bwa_seq_)) >= 0) {
@@ -385,7 +387,7 @@ int SequenceFile::LoadNextBatchInMegabytes(uint64_t megabytes_to_load, bool rand
     id += 1;  // Increment the relative sequence id counter.
     id_absolute += 1;
 
-    if (ConvertFromBytes(MEMORY_UNIT_MEGABYTE, current_data_size_) >= megabytes_to_load)  // Batch loading stopping condition.
+    if (megabytes_to_load > 0 && ConvertFromBytes(MEMORY_UNIT_MEGABYTE, current_data_size_) >= megabytes_to_load)  // Batch loading stopping condition.
       break;
   }
 
@@ -439,4 +441,12 @@ void SequenceFile::Verbose(FILE *fp) {
   }
 
   fflush(fp);
+}
+
+uint64_t SequenceFile::get_current_batch_id() const {
+  return current_batch_id_;
+}
+
+void SequenceFile::set_current_batch_id(uint64_t currentBatchId) {
+  current_batch_id_ = currentBatchId;
 }
