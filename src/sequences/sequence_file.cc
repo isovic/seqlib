@@ -63,7 +63,7 @@ void SequenceFile::ClearOnlyData() {
 
 void SequenceFile::AddSequence(SingleSequence *sequence) {
   sequences_.push_back(sequence);
-  current_data_size_ += sequence->CalculateTotalSize(MEMORY_UNIT_BYTE);
+  current_data_size_ += sequence->CalculateTotalSize(kMemoryUnitByte);
 }
 
 const SequenceVector& SequenceFile::get_sequences() const {
@@ -88,60 +88,10 @@ int SequenceFile::LoadAllFromFastaOrFastq(std::string file_path, bool randomize_
   if (OpenFileForBatchLoading(file_path))
     return 1;
 
-  int32_t l;
-  uint64_t id = 0;
-  SingleSequence *sequence = NULL;
-
-  while ((l = kseq_read(bwa_seq_)) >= 0) {
-    sequence = new SingleSequence();
-
-    // BWA's parsing functions split the headers in two parts, name
-    // and comment. We join them here again, but we must check that
-    // these are not null pointers or empty strings.
-    std::string header("");
-    if (bwa_seq_->name.l > 0)
-      header += std::string(bwa_seq_->name.s);
-    if (bwa_seq_->comment.l > 0)
-      header += std::string(" ") + std::string(bwa_seq_->comment.s);
-
-    // If there are no quality values, do not initialize them.
-    if (!bwa_seq_->qual.l) {
-      sequence->InitHeaderAndDataFromAscii((char *) header.c_str(),
-                                                header.length(),
-                                                (int8_t *) bwa_seq_->seq.s,
-                                                bwa_seq_->seq.l, id);
-    } else {
-      // If there are quality values, but for some reason the length of
-      // the quality string is different from the length of the sequences
-      // then the file is corrupted. Reporting the error here.
-      if ((bwa_seq_->qual.l > 0 && bwa_seq_->seq.l != bwa_seq_->qual.l) || l == -2) {
-        LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file '%s'. Sequence ID: %ld. Skipping rest of the file.", file_path.c_str(), id));
-        id += 1;
-        break;
-      }
-
-      sequence->InitAllFromAscii((char *) header.c_str(), header.length(),
-                                      (int8_t *) bwa_seq_->seq.s,
-                                      (int8_t *) bwa_seq_->qual.s, bwa_seq_->seq.l, id, id);
-    }
-
-    if (randomize_non_acgt_bases == true)
-  	  sequence->RandomizeNonACGTBases();
-
-    AddSequence(sequence);
-    id += 1;
-
-  }
-
-  // If there are quality values, but for some reason the length of
-  // the quality string is different from the length of the sequences
-  // then the file is corrupted. Reporting the error here.
-  // This check is repeated here because of BWA's kseq_read function
-  // which can break on such sequences, thus to report the error non the less.
-  // Additionally, if the functionality of kseq_read is changed, the error will
-  // be reported anyway.
-  if ((bwa_seq_->qual.l > 0 && bwa_seq_->seq.l != bwa_seq_->qual.l) || l == -2) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file '%s'. Sequence ID: %ld. Skipping rest of the file.", file_path.c_str(), id));
+  int ret_val = 0;
+  if ((ret_val = LoadAllFromFastaOrFastqAsBatch(randomize_non_acgt_bases)) != 0) {
+    CloseFileAfterBatchLoading();
+    return ret_val;
   }
 
   return CloseFileAfterBatchLoading();
@@ -153,61 +103,16 @@ int SequenceFile::LoadAllFromFastaOrFastqAsBatch(bool randomize_non_acgt_bases) 
   current_batch_id_ = 0;
   current_batch_starting_sequence_id_ = 0;
 
-
-
   if (bwa_fp_ == NULL || bwa_seq_ == NULL)
   {
     if (bwa_fp_ == NULL)
-      LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_OPENING_FILE, "Offending variable: bwt_fp_."));
+      LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_OPENING_FILE, "Offending variable: bwt_fp_."));
     if (bwa_seq_ == NULL)
-      LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Offending variable: bwt_seq_."));
+      LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Offending variable: bwt_seq_."));
     return 1;
   }
 
-  int32_t l;
-  uint64_t id = 0;
-  SingleSequence *sequence = NULL;
-
-  while ((l = kseq_read(bwa_seq_)) >= 0) {
-    sequence = new SingleSequence();
-
-    // BWA's parsing functions split the headers in two parts, name
-    // and comment. We join them here again, but we must check that
-    // these are not null pointers or empty strings.
-    std::string header("");
-    if (bwa_seq_->name.l > 0)
-      header += std::string(bwa_seq_->name.s);
-    if (bwa_seq_->comment.l > 0)
-      header += std::string(" ") + std::string(bwa_seq_->comment.s);
-
-    // If there are no quality values, do not initialize them.
-    if (!bwa_seq_->qual.l) {
-      sequence->InitHeaderAndDataFromAscii((char *) header.c_str(),
-                                                header.length(),
-                                                (int8_t *) bwa_seq_->seq.s,
-                                                bwa_seq_->seq.l, id, id);
-    } else {
-      // If there are quality values, but for some reason the length of
-      // the quality string is different from the length of the sequences
-      // then the file is corrupted. Reporting the error here.
-      if ((bwa_seq_->qual.l > 0 && bwa_seq_->seq.l != bwa_seq_->qual.l) || l == -2) {
-        LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file '%s'. Sequence ID: %ld. Skipping rest of the file.", open_file_path_.c_str(), id));
-        id += 1;
-        break;
-      }
-
-      sequence->InitAllFromAscii((char *) header.c_str(), header.length(),
-                                      (int8_t *) bwa_seq_->seq.s,
-                                      (int8_t *) bwa_seq_->qual.s, bwa_seq_->seq.l, id, id);
-    }
-
-    if (randomize_non_acgt_bases == true)
-  	  sequence->RandomizeNonACGTBases();
-
-    AddSequence(sequence);
-    id += 1;
-
-  }
+  int64_t num_loaded_seqs = LoadSeqsFromFastq_(0, 0, randomize_non_acgt_bases);
 
   // If there are quality values, but for some reason the length of
   // the quality string is different from the length of the sequences
@@ -216,8 +121,9 @@ int SequenceFile::LoadAllFromFastaOrFastqAsBatch(bool randomize_non_acgt_bases) 
   // which can break on such sequences, thus to report the error non the less.
   // Additionally, if the functionality of kseq_read is changed, the error will
   // be reported anyway.
-  if ((bwa_seq_->qual.l > 0 && bwa_seq_->seq.l != bwa_seq_->qual.l) || l == -2) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file '%s'. Sequence ID: %ld. Skipping rest of the file.", open_file_path_.c_str(), id));
+  if ((bwa_seq_->qual.l > 0 && bwa_seq_->seq.l != bwa_seq_->qual.l) || num_loaded_seqs < 0) {
+    ERROR_REPORT(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file '%s'. Sequence ID: %ld. Skipping rest of the file.", open_file_path_.c_str(), sequences_.size());
+    return -2;
   }
 
   // This happens when EOF is reached. Not technically an error, but not as if the batch has been loaded.
@@ -231,7 +137,7 @@ int SequenceFile::OpenFileForBatchLoading(std::string file_path) {
   bwa_fp_ = gzopen(file_path.c_str(), "r");
 
   if (bwa_fp_ == NULL) {
-//    ErrorReporting::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, ErrorReporting::GetInstance().GenerateErrorMessage(ERR_OPENING_FILE, "File path: '%s'.", file_path.c_str()));
+    FATAL_REPORT(ERR_OPENING_FILE, "File path: '%s'.", file_path.c_str());
     return 1;
   }
 
@@ -244,7 +150,7 @@ int SequenceFile::OpenFileForBatchLoading(std::string file_path) {
 
 int SequenceFile::CloseFileAfterBatchLoading() {
   if (bwa_seq_ == NULL) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_CLOSING_FILE, "Offending variable: bwt_seq_."));
+    LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_CLOSING_FILE, "Offending variable: bwt_seq_."));
     return 1;
   }
 
@@ -266,63 +172,19 @@ int SequenceFile::LoadNextBatchNSequences(uint64_t num_seqs_to_load, bool random
   if (bwa_fp_ == NULL || bwa_seq_ == NULL)
   {
     if (bwa_fp_ == NULL)
-      LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_OPENING_FILE, "Offending variable: bwt_fp_."));
+      LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_OPENING_FILE, "Offending variable: bwt_fp_."));
     if (bwa_seq_ == NULL)
-      LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Offending variable: bwt_seq_."));
+      LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Offending variable: bwt_seq_."));
     return 1;
   }
 
-  int32_t l;
-  uint64_t id = 0;
-  uint64_t id_absolute = current_batch_starting_sequence_id_;
-  printf ("---> current_batch_starting_sequence_id_ = %ld\n", current_batch_starting_sequence_id_);
-  fflush(stdout);
-  SingleSequence *sequence = NULL;
+  int64_t num_loaded_seqs = 0;
+  num_loaded_seqs = LoadSeqsFromFastq_(num_seqs_to_load, 0, randomize_non_acgt_bases);
 
-  while ((l = kseq_read(bwa_seq_)) >= 0) {
-    sequence = new SingleSequence();
-
-    // BWA's parsing functions split the headers in two parts, name
-    // and comment. We join them here again, but we must check that
-    // these are not null pointers or empty strings.
-    std::string header("");
-    if (bwa_seq_->name.l > 0)
-      header += std::string(bwa_seq_->name.s);
-    if (bwa_seq_->comment.l > 0)
-      header += std::string(" ") + std::string(bwa_seq_->comment.s);
-
-    if (!bwa_seq_->qual.l) {  // If bwa_seq_->qual.l is equal to 0, then we are loading a FASTA file. In this case, only header and data need to be initialized.
-      sequence->InitHeaderAndDataFromAscii((char *) header.c_str(),
-                                                header.length(),
-                                                (int8_t *) bwa_seq_->seq.s,
-                                                bwa_seq_->seq.l, id, id_absolute);
-    } else {  // If we got here, we are loading a FASTQ file. All three components (header, data and quality scores) need to be initialized.
-      if (bwa_seq_->seq.l != bwa_seq_->qual.l) {
-        LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file! Batch ID: %ld. Absolute sequence ID: %ld. Relative sequence ID: %ld. Skipping rest of the file.", current_batch_id_, (current_batch_starting_sequence_id_ + id), id));
-        CloseFileAfterBatchLoading();
-        return 1;
-      }
-
-      sequence->InitAllFromAscii((char *) header.c_str(), header.length(),
-                                      (int8_t *) bwa_seq_->seq.s,
-                                      (int8_t *) bwa_seq_->qual.s, bwa_seq_->seq.l, id, id_absolute);
-    }
-
-    if (randomize_non_acgt_bases == true)
-  	  sequence->RandomizeNonACGTBases();
-
-    AddSequence(sequence);
-    id += 1;  // Increment the relative sequence id counter.
-    id_absolute += 1;
-
-    if (id >= num_seqs_to_load)  // Batch loading stopping condition.
-      break;
-  }
-
-  if ((bwa_seq_->qual.l > 0 && bwa_seq_->seq.l != bwa_seq_->qual.l) || l == -2) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file! Batch ID: %ld. Absolute sequence ID: %ld. Relative sequence ID: %ld. Skipping rest of the file.", current_batch_id_, (current_batch_starting_sequence_id_ + id), id));
+  if ((bwa_seq_->qual.l > 0 && bwa_seq_->seq.l != bwa_seq_->qual.l) || num_loaded_seqs < 0) {
+    ERROR_REPORT(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file! Batch ID: %ld. Absolute sequence ID: %ld. Relative sequence ID: %ld. Skipping rest of the file.", current_batch_id_, (current_batch_starting_sequence_id_ + sequences_.size()), sequences_.size());
     CloseFileAfterBatchLoading();
-    return 1;
+    return -2;
   }
 
   // This happens when EOF is reached. Not technically an error, but not as if the batch has been loaded.
@@ -340,61 +202,19 @@ int SequenceFile::LoadNextBatchInMegabytes(uint64_t megabytes_to_load, bool rand
   if (bwa_fp_ == NULL || bwa_seq_ == NULL)
   {
     if (bwa_fp_ == NULL)
-      LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_OPENING_FILE, "Offending variable: bwt_fp_."));
+      LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_OPENING_FILE, "Offending variable: bwt_fp_."));
     if (bwa_seq_ == NULL)
-      LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Offending variable: bwt_seq_."));
+      LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Offending variable: bwt_seq_."));
     return 1;
   }
 
-  int32_t l;
-  uint64_t id = 0;
-  uint64_t id_absolute = current_batch_starting_sequence_id_;
-  SingleSequence *sequence = NULL;
+  int64_t num_loaded_seqs = 0;
+  num_loaded_seqs = LoadSeqsFromFastq_(0, megabytes_to_load, randomize_non_acgt_bases);
 
-  while ((l = kseq_read(bwa_seq_)) >= 0) {
-    sequence = new SingleSequence();
-
-    // BWA's parsing functions split the headers in two parts, name
-    // and comment. We join them here again, but we must check that
-    // these are not null pointers or empty strings.
-    std::string header("");
-    if (bwa_seq_->name.l > 0)
-      header += std::string(bwa_seq_->name.s);
-    if (bwa_seq_->comment.l > 0)
-      header += std::string(" ") + std::string(bwa_seq_->comment.s);
-
-    if (!bwa_seq_->qual.l) {  // If bwa_seq_->qual.l is equal to 0, then we are loading a FASTA file. In this case, only header and data need to be initialized.
-      sequence->InitHeaderAndDataFromAscii((char *) header.c_str(),
-                                                header.length(),
-                                                (int8_t *) bwa_seq_->seq.s,
-                                                bwa_seq_->seq.l, id, id_absolute);
-    } else {  // If we got here, we are loading a FASTQ file. All three components (header, data and quality scores) need to be initialized.
-      if (bwa_seq_->seq.l != bwa_seq_->qual.l) {
-        LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file! Batch ID: %ld. Absolute sequence ID: %ld. Relative sequence ID: %ld. Skipping rest of the file.", current_batch_id_, (current_batch_starting_sequence_id_ + id), id));
-        CloseFileAfterBatchLoading();
-        return 1;
-      }
-
-      sequence->InitAllFromAscii((char *) header.c_str(), header.length(),
-                                      (int8_t *) bwa_seq_->seq.s,
-                                      (int8_t *) bwa_seq_->qual.s, bwa_seq_->seq.l, id, id_absolute);
-    }
-
-    if (randomize_non_acgt_bases == true)
-  	  sequence->RandomizeNonACGTBases();
-
-    AddSequence(sequence);
-    id += 1;  // Increment the relative sequence id counter.
-    id_absolute += 1;
-
-    if (megabytes_to_load > 0 && ConvertFromBytes(MEMORY_UNIT_MEGABYTE, current_data_size_) >= megabytes_to_load)  // Batch loading stopping condition.
-      break;
-  }
-
-  if ((bwa_seq_->qual.l > 0 && bwa_seq_->seq.l != bwa_seq_->qual.l) || l == -2) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file! Batch ID: %ld. Absolute sequence ID: %ld. Relative sequence ID: %ld. Skipping rest of the file.", current_batch_id_, (current_batch_starting_sequence_id_ + id), id));
+  if ((bwa_seq_->qual.l > 0 && bwa_seq_->seq.l != bwa_seq_->qual.l) || num_loaded_seqs < 0) {
+    LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file! Batch ID: %ld. Absolute sequence ID: %ld. Relative sequence ID: %ld. Skipping rest of the file.", current_batch_id_, (current_batch_starting_sequence_id_ + num_loaded_seqs), num_loaded_seqs));
     CloseFileAfterBatchLoading();
-    return 1;
+    return -2;
   }
 
   // This happens when EOF is reached. Not technically an error, but not as if the batch has been loaded.
@@ -409,7 +229,7 @@ uint64_t SequenceFile::CalculateTotalSize(int32_t memory_unit) {
 
   for (SequenceVector::iterator sequence_iterator = sequences_.begin();
       sequence_iterator != sequences_.end(); sequence_iterator++) {
-    total_size += (*sequence_iterator)->CalculateTotalSize(MEMORY_UNIT_BYTE);
+    total_size += (*sequence_iterator)->CalculateTotalSize(kMemoryUnitByte);
   }
 
   if (memory_unit == MEMORY_UNIT_BYTE)
@@ -421,7 +241,7 @@ uint64_t SequenceFile::CalculateTotalSize(int32_t memory_unit) {
   else if (memory_unit == MEMORY_UNIT_GIGABYTE)
     total_size = total_size / (((uint64_t) 1024) * ((uint64_t) 1024) * ((uint64_t) 1024));
   else
-    LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Memory unit not recognized! Returning value in bytes."));
+    LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Memory unit not recognized! Returning value in bytes."));
 
   return total_size;
 }
@@ -449,4 +269,66 @@ uint64_t SequenceFile::get_current_batch_id() const {
 
 void SequenceFile::set_current_batch_id(uint64_t currentBatchId) {
   current_batch_id_ = currentBatchId;
+}
+
+uint64_t SequenceFile::get_current_batch_starting_sequence_id() const {
+  return current_batch_starting_sequence_id_;
+}
+
+void SequenceFile::set_current_batch_starting_sequence_id(uint64_t currentBatchStartingSequenceId) {
+  current_batch_starting_sequence_id_ = currentBatchStartingSequenceId;
+}
+
+int SequenceFile::LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases) {
+  int32_t l;
+  uint64_t id = 0;
+  uint64_t id_absolute = current_batch_starting_sequence_id_;
+  SingleSequence *sequence = NULL;
+
+  while ((l = kseq_read(bwa_seq_)) >= 0) {
+    sequence = new SingleSequence();
+
+    // BWA's parsing functions split the headers in two parts, name
+    // and comment. We join them here again, but we must check that
+    // these are not null pointers or empty strings.
+    std::string header("");
+    if (bwa_seq_->name.l > 0)
+      header += std::string(bwa_seq_->name.s);
+    if (bwa_seq_->comment.l > 0)
+      header += std::string(" ") + std::string(bwa_seq_->comment.s);
+
+    if (!bwa_seq_->qual.l) {  // If bwa_seq_->qual.l is equal to 0, then we are loading a FASTA file. In this case, only header and data need to be initialized.
+      sequence->InitHeaderAndDataFromAscii((char *) header.c_str(),
+                                                header.length(),
+                                                (int8_t *) bwa_seq_->seq.s,
+                                                bwa_seq_->seq.l, id, id_absolute);
+    } else {  // If we got here, we are loading a FASTQ file. All three components (header, data and quality scores) need to be initialized.
+      if (bwa_seq_->seq.l != bwa_seq_->qual.l) {
+        LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file! Batch ID: %ld. Absolute sequence ID: %ld. Relative sequence ID: %ld. Skipping rest of the file.", current_batch_id_, (current_batch_starting_sequence_id_ + id), id));
+        CloseFileAfterBatchLoading();
+        return 1;
+      }
+
+      sequence->InitAllFromAscii((char *) header.c_str(), header.length(),
+                                      (int8_t *) bwa_seq_->seq.s,
+                                      (int8_t *) bwa_seq_->qual.s, bwa_seq_->seq.l, id, id_absolute);
+    }
+
+    if (randomize_non_acgt_bases == true)
+      sequence->RandomizeNonACGTBases();
+
+    AddSequence(sequence);
+    id += 1;  // Increment the relative sequence id counter.
+    id_absolute += 1;
+
+    if (num_seqs_to_load > 0 && id >= num_seqs_to_load)  // Batch loading stopping condition.
+      break;
+    if (megabytes_to_load > 0 && ConvertFromBytes(MEMORY_UNIT_MEGABYTE, current_data_size_) >= megabytes_to_load)  // Batch loading stopping condition.
+      break;
+  }
+
+  if (l == -2)
+    return -2;
+
+  return id;
 }

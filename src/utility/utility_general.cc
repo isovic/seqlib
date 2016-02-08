@@ -13,8 +13,8 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <dirent.h>
 #include "utility/utility_general.h"
-//#include "utility/utility_basic_defines.h"
 #include "log_system/log_system.h"
 
 
@@ -113,18 +113,6 @@ void ProcessMemUsage(double& vm_usage, double& resident_set)
    vm_usage     = vsize / 1024.0;
    resident_set = rss * page_size_kb;
 }
-
-/*
-void PrintRSSUsage() {
-//  double vm=0.0f, rss=0.0f;
-//  ProcessMemUsage(vm, rss);
-//  printf ("[VMsize = %.2f, RSS = %.2f]\n");
-  #ifndef RELEASE_VERSION
-    printf ("[currentRSS = %ld MB, peakRSS = %ld MB]\n", getCurrentRSS()/(1024*1024), getPeakRSS()/(1024*1024));
-    fflush(stdout);
-  #endif
-}
-*/
 
 std::string FormatMemoryConsumptionAsString() {
   std::stringstream ss;
@@ -272,7 +260,7 @@ std::string FormatString(const char* additional_message, ...) {
 
   if (formatted_string == NULL) {
 //    LOG(FATAL) << ErrorReporting::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Allocation of memory for variable 'formatted_string'.");
-    LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Allocation of memory for variable 'formatted_string'."));
+    LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Allocation of memory for variable 'formatted_string'."));
     return ((std::string) "");
   }
 
@@ -371,11 +359,63 @@ int GetClippingOpsFromCigar(const std::string &cigar, char *clip_op_front, int64
   return 0;
 }
 
+bool GetFileList(std::string folder, std::vector<std::string> &ret_files) {
+  ret_files.clear();
+
+  DIR *dir;
+  struct dirent *ent;
+  if ((dir = opendir(folder.c_str())) != NULL) {
+    // Get the list of file and folder names.
+    while ((ent = readdir(dir)) != NULL) {
+      ret_files.push_back(std::string(ent->d_name));
+    }
+    closedir (dir);
+
+  } else {
+    LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_FOLDER_NOT_FOUND, "Folder path: '%s'.", folder.c_str()));
+    return false;
+  }
+
+  return true;
+}
+
+bool StringEndsWith(std::string const &full_string, std::string const &ending) {
+  if (full_string.length() >= ending.length()) {
+    return (full_string.compare(full_string.length() - ending.length(), ending.length(), ending) == 0);
+  } else {
+    return false;
+  }
+}
+
+void FilterFileList(std::vector<std::string> &files, std::vector<std::string> &ret_read_files, std::vector<std::string> &ret_sam_files) {
+  std::string ext_fasta = "fasta";
+  std::string ext_fastq = "fastq";
+  std::string ext_fa = "fa";
+  std::string ext_fq = "fq";
+  std::string ext_sam = "sam";
+  std::string sam_file = "";
+
+  ret_read_files.clear();
+  ret_sam_files.clear();
+
+  for (int64_t i=0; i<((int64_t) files.size()); i++) {
+    if (StringEndsWith(files.at(i), ext_fastq) || StringEndsWith(files.at(i), ext_fasta)) {
+      sam_file = files.at(i).substr(0, files.at(i).size() - 5) + ext_sam;
+      ret_read_files.push_back(files.at(i));
+      ret_sam_files.push_back(sam_file);
+    }
+    else if (StringEndsWith(files.at(i), ext_fq) || StringEndsWith(files.at(i), ext_fa)) {
+      sam_file = files.at(i).substr(0, files.at(i).size() - 2) + ext_sam;
+      ret_read_files.push_back(files.at(i));
+      ret_sam_files.push_back(sam_file);
+    }
+  }
+}
+
 std::string ConvertToBinary(uint64_t decimal) {
   std::stringstream ss;
   int64_t num_digits = 0;
-//  if (decimal == 0)
-//    ss << "0";
+
   while (decimal > 0) {
     ss << ((char) ((decimal % 2) + ((char) '0')));
     decimal /= 2;
@@ -387,8 +427,6 @@ std::string ConvertToBinary(uint64_t decimal) {
   if (ss.str().size() < (64 + 15) && (num_digits) % 4 == 0)
     ss << " ";
 
-//  for (int64_t i=0; i<(4 - (num_digits) % 4) && ((num_digits) % 4) != 0; i++)
-//    ss << "0";
   while (ss.str().size() < (64 + 15)) {
     ss << '0';
     if (ss.str().size() < (64 + 15) && (num_digits + 1) % 4 == 0)
@@ -398,6 +436,5 @@ std::string ConvertToBinary(uint64_t decimal) {
 
   std::string binary = ss.str();
   std::reverse(binary.begin(), binary.end());
-//  binary = std::string("(MSB) ") + binary + std::string(" (LSB)");
   return binary;
 }

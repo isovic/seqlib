@@ -16,7 +16,6 @@
 #include <algorithm>
 #include <numeric> 
 
-
 enum SeqOrientation {
   kForward = 0,
   kReverse = 1,
@@ -73,6 +72,9 @@ enum ProcessedReadState {
 #define ALIGNMENT_LOCALIZATION_PROBLEM  -3
 #define ALIGNMENT_MYERS_INTERNAL_ERROR  -4
 #define ALIGNMENT_DISTANCE_BETWEEN_ANCHORS_PROBLEM  -5
+#define ALIGNMENT_OPAL_INTERNAL_ERROR -6
+#define ALIGNMENT_OPAL_OVERFLOW_ERROR -7
+#define ALIGNMENT_OPAL_NO_SIMD -8
 
 
 
@@ -94,7 +96,6 @@ void PrintSubstring(char *text, int64_t length, FILE *fp=stdout);
 std::string GetSubstring(char *text, int64_t length);
 unsigned char* CreateReverseCopy(const unsigned char* seq, uint64_t length);
 std::string TrimToFirstSpace(std::string original_string);
-std::string ConvertToBinary(uint64_t decimal);
 
 // Calculates the sigmoid function with given parameters.
 // S(t) = 1.0f / (1.0f + exp(-t));
@@ -138,8 +139,28 @@ T* reverse_data(const T* data, int64_t data_len) {
   return ret_data;
 }
 
+/// Reverses an array in place.
+template <typename T>
+void ReverseArray(std::vector<T> & array) {
+  int64_t len = array.size();
+  for (int64_t i=0; i<len/2; i++) {
+    T temp = array[i];
+    array[i] = array[len-i-1];
+    array[len-i-1] = temp;
+  }
+}
+
 int GetClippingOpsFromCigar(const std::string &cigar, char *clip_op_front, int64_t *clip_count_front, char *clip_op_back, int64_t *clip_count_back);
 
+// Retrieves a file list from the given folder.
+bool GetFileList(std::string folder, std::vector<std::string> &ret_files);
 
+// Check if string ends with the given suffix (parameter 'ending'), and returns true if so.
+bool StringEndsWith(std::string const &full_string, std::string const &ending);
+
+// Returns only files with one of the following extensions: fasta, fastq, fa, fq, sam.
+void FilterFileList(std::vector<std::string> &files, std::vector<std::string> &ret_read_files, std::vector<std::string> &ret_sam_files);
+
+std::string ConvertToBinary(uint64_t decimal);
 
 #endif /* UTILITY_GENERAL_H_ */

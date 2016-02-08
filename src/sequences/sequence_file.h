@@ -24,6 +24,14 @@
 #include "utility/utility_conversion-inl.h"
 
 #include "sequences/kseq.h"
+
+enum SequenceFormat {
+  SEQ_FORMAT_FASTQ = 0,     // Reads either FASTA or FASTQ.
+  SEQ_FORMAT_GFA = 1        // Reads the Graphical Assembly Format
+//  SEQ_FORMAT_SAM = 2,     // TODO: Not implemented yet.
+//  SEQ_FORMAT_BAM = 3      // TODO: Not implemented yet.
+};
+
 //KSEQ_DECLARE(gzFile)
 KSEQ_INIT(gzFile, gzread)
 
@@ -107,6 +115,7 @@ class SequenceFile {
   //                        If bigger than total number of sequences in the
   //                        input file, the rest of the file until EOF
   //                        will be loaded.
+  //                        If 0, the entire dataset will be loaded.
   // Return:
   //    Returns 0 if successful, -1 if no more sequences can be loaded
   //    (i.e. EOF), and otherwise if unsuccessful.
@@ -157,16 +166,10 @@ class SequenceFile {
   const SequenceVector& get_sequences() const;
   void set_sequences(const SequenceVector& sequences);
 
-  uint64_t get_current_batch_starting_sequence_id() const {
-    return current_batch_starting_sequence_id_;
-  }
-
-  void set_current_batch_starting_sequence_id(uint64_t currentBatchStartingSequenceId) {
-    current_batch_starting_sequence_id_ = currentBatchStartingSequenceId;
-  }
-
   uint64_t get_current_batch_id() const;
   void set_current_batch_id(uint64_t currentBatchId);
+  uint64_t get_current_batch_starting_sequence_id() const;
+  void set_current_batch_starting_sequence_id(uint64_t currentBatchStartingSequenceId);
 
  private:
   SequenceVector sequences_;  // Vector holding all the sequences in the file (or in a batch).
@@ -179,6 +182,16 @@ class SequenceFile {
                                 // using the AddSequence, their size (in bytes)
                                 // is automatically calculated. Used for batch
                                 // loading of fixed size of sequences.
+
+  int LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases);
+
+  // Given the path to a GFA file, this function loads all
+  // sequences present in the file (lines beginning with 'S') into this object.
+  // Input:
+  //    file_path - Path to the GFA file.
+  // Return:
+  //    Returns 0 if successful.
+  int LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases);
 
 };
 

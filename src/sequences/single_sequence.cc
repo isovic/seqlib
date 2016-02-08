@@ -9,15 +9,10 @@
  */
 
 #include <random>
-//#include "bwa/kseq.h"
-//#include "bwa/bwa.h"
-//#include "bwa/bwamem.h"
-//#include "bwa/kvec.h"
-//#include "bwa/utils.h"
-//#include "bwa/utils.h"
+#include <string.h>
 #include "sequences/single_sequence.h"
 #include "log_system/log_system.h"
-#include <string.h>
+#include "utility/utility_conversion-inl.h"
 
 SingleSequence::SingleSequence() {
   header_ = NULL;
@@ -99,7 +94,7 @@ int SingleSequence::InitHeader(char *header, uint32_t header_length) {
   header_ = (char *) new char[header_length + 1];
 
   if (header_ == NULL) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: header_."));
+    LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: header_."));
     return 1;
   }
 
@@ -125,7 +120,7 @@ int SingleSequence::InitQuality(int8_t* quality, uint64_t quality_length) {
   quality_ = (int8_t *) new int8_t[quality_length + 1];
 
   if (quality_ == NULL) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: quality_."));
+    LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: quality_."));
     return 1;
   }
 
@@ -147,7 +142,7 @@ int SingleSequence::InitData_(int8_t* data, uint64_t data_length,
   data_ = (int8_t *) new int8_t[data_length + 1];
 
   if (data_ == NULL) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: data_."));
+    LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: data_."));
     return 1;
   }
 
@@ -264,24 +259,24 @@ int SingleSequence::InitAllFrom2BitSparse(char *header, uint32_t header_length,
       | InitQuality(quality, sequence_length));
 }
 
-uint64_t SingleSequence::CalculateTotalSize(int32_t memory_unit) {
+uint64_t SingleSequence::CalculateTotalSize(SFMemoryUnit memory_unit) {
   uint64_t total_sequence_size = 0;
 
   total_sequence_size = header_length_ * sizeof(*header_)
       + data_length_ * sizeof(*data_) + quality_length_ * sizeof(*quality_);
 
-  if (memory_unit == MEMORY_UNIT_BYTE)
+  if (memory_unit == kMemoryUnitByte)
     total_sequence_size = total_sequence_size / ((uint64_t) 1);
-  else if (memory_unit == MEMORY_UNIT_KILOBYTE)
+  else if (memory_unit == kMemoryUnitKilobyte)
     total_sequence_size = total_sequence_size / ((uint64_t) 1024);
-  else if (memory_unit == MEMORY_UNIT_MEGABYTE)
+  else if (memory_unit == kMemoryUnitMegabyte)
     total_sequence_size = total_sequence_size
         / (((uint64_t) 1024) * ((uint64_t) 1024));
-  else if (memory_unit == MEMORY_UNIT_GIGABYTE)
+  else if (memory_unit == kMemoryUnitGigabyte)
     total_sequence_size = total_sequence_size
         / (((uint64_t) 1024) * ((uint64_t) 1024) * ((uint64_t) 1024));
   else
-    LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Memory unit not recognized! Returning value in bytes."));
+    LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Memory unit not recognized! Returning value in bytes."));
 
   return total_sequence_size;
 }
@@ -341,7 +336,7 @@ int SingleSequence::ConvertDataFormat(DataFormat new_data_format) {
 // TODO: Implement ConvertAndReturnDataFormat function!!
 SingleSequence* SingleSequence::ConvertDataFormatAndReturn(DataFormat new_data_format) const {
   if (data_format_ == new_data_format) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_WARNING, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Targeted data format is the same as current. No changes will be made."));
+    LogSystem::GetInstance().Error(SEVERITY_INT_WARNING, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Targeted data format is the same as current. No changes will be made."));
     return NULL;
   }
 
@@ -363,7 +358,7 @@ int SingleSequence::ConvertDataFormatFromAscii_(DataFormat new_data_format) {
 
     int8_t *new_data = new int8_t[sequence_length_ + 1];
     if (new_data == NULL) {
-      LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_data."));
+      LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_data."));
       return 1;
     }
 
@@ -387,7 +382,7 @@ int SingleSequence::ConvertDataFormatFromAscii_(DataFormat new_data_format) {
         + (((sequence_length_ & 3) == 0) ? 0 : 1);
     int8_t *new_data = new int8_t[new_data_length + 1];
     if (new_data == NULL) {
-      LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_data."));
+      LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_data."));
       return 1;
     }
 
@@ -431,7 +426,7 @@ int SingleSequence::ConvertDataFormatFromAscii_(DataFormat new_data_format) {
         + (((sequence_length_ & 3) == 0) ? 0 : 1);
     int8_t *new_data = new int8_t[new_data_length + 1];
     if (new_data == NULL) {
-      LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_data."));
+      LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_data."));
       return 1;
     }
 
@@ -462,7 +457,7 @@ int SingleSequence::ConvertDataFormatToAscii_() {
 
     int8_t *new_data = new int8_t[sequence_length_ + 1];
     if (new_data == NULL) {
-      LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_data."));
+      LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_data."));
       return 1;
     }
 
@@ -504,7 +499,7 @@ int SingleSequence::ConvertDataFormatToAscii_() {
 
     int8_t *new_data = new int8_t[sequence_length_ + 1];
     if (new_data == NULL) {
-      LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_data."));
+      LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_data."));
       return 1;
     }
 
@@ -524,7 +519,7 @@ int SingleSequence::ConvertDataFormatToAscii_() {
     return 0;
   }
 
-  LogSystem::GetInstance().Log(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Unknown targeted data format."));
+  LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Unknown targeted data format."));
 
   return 1;
 }
@@ -544,12 +539,12 @@ void SingleSequence::CopyFrom(const SingleSequence &op1) {
 int8_t * SingleSequence::GetReverseComplement() const {
   int8_t *new_data = new int8_t[data_length_ + 1];
   if (new_data == NULL) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_data."));
+    LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_data."));
     return NULL;
   }
 
   if (data_format_ == kDataFormat2BitPacked) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_NOT_IMPLEMENTED, ""));
+    LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_NOT_IMPLEMENTED, ""));
     return NULL;
   }
   else {
@@ -572,12 +567,12 @@ std::string SingleSequence::GetReverseComplementAsString() const {
   std::string ret;
   int8_t *new_data = new int8_t[data_length_ + 1];
   if (new_data == NULL) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_data."));
+    LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_data."));
     return NULL;
   }
 
   if (data_format_ == kDataFormat2BitPacked) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_NOT_IMPLEMENTED, ""));
+    LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_NOT_IMPLEMENTED, ""));
     return NULL;
   }
   else {
@@ -609,7 +604,7 @@ int8_t * SingleSequence::GetReverseQuality() const {
 
   int8_t *new_quality = new int8_t[quality_length_ + 1];
   if (new_quality == NULL) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_quality."));
+    LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_quality."));
     return NULL;
   }
 
@@ -631,7 +626,7 @@ std::string SingleSequence::GetReverseQualityAsString() const {
 
   int8_t *new_quality = new int8_t[quality_length_ + 1];
   if (new_quality == NULL) {
-    LogSystem::GetInstance().Log(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_quality."));
+    LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "Offending variable: new_quality."));
     return std::string("");
   }
 
