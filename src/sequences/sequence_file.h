@@ -26,10 +26,11 @@
 #include "sequences/kseq.h"
 
 enum SequenceFormat {
-  SEQ_FORMAT_FASTQ = 0,     // Reads either FASTA or FASTQ.
-  SEQ_FORMAT_GFA = 1        // Reads the Graphical Assembly Format
-//  SEQ_FORMAT_SAM = 2,     // TODO: Not implemented yet.
-//  SEQ_FORMAT_BAM = 3      // TODO: Not implemented yet.
+  SEQ_FORMAT_UNKNOWN = 0,
+  SEQ_FORMAT_FASTQ = 1,     // Reads either FASTA or FASTQ.
+  SEQ_FORMAT_GFA = 2        // Reads the Graphical Assembly Format
+//  SEQ_FORMAT_SAM = 3,     // TODO: Not implemented yet.
+//  SEQ_FORMAT_BAM = 4      // TODO: Not implemented yet.
 };
 
 //KSEQ_DECLARE(gzFile)
@@ -59,11 +60,11 @@ class SequenceFile {
   SequenceFile();
 
   // Initializes the object, and calls LoadAllFromFastaOrFastq.
-  SequenceFile(std::string file_path);
+  SequenceFile(SequenceFormat seq_file_fmt, std::string file_path);
 
   // Initializes the object, and calls OpenFileForBatchLoading and
   // LoadNextBatchNSequences respectively.
-  SequenceFile(std::string file_path, uint64_t num_seqs_to_load);
+  SequenceFile(SequenceFormat seq_file_fmt, std::string file_path, uint64_t num_seqs_to_load);
 
   ~SequenceFile();
 
@@ -94,14 +95,14 @@ class SequenceFile {
   //    Returns 0 if successful.
   int CloseFileAfterBatchLoading();
 
-  // Given the path to a FASTA or a FASTQ file, this function loads all
+  // Given the path to a file, this function loads all
   // sequences present in the file into this object.
   // Input:
-  //    file_path - Path to the FASTA/FASTQ file.
+  //    file_path - Path to the FASTA/FASTQ/GFA/... file.
   // Return:
   //    Returns 0 if successful.
-  int LoadAllFromFastaOrFastq(std::string file_path, bool randomize_non_acgt_bases=false);
-  int LoadAllFromFastaOrFastqAsBatch(bool randomize_non_acgt_bases=false);
+  int LoadAll(SequenceFormat seq_file_fmt, std::string file_path, bool randomize_non_acgt_bases=false);
+  int LoadAllAsBatch(SequenceFormat seq_file_fmt, bool randomize_non_acgt_bases=false);
 
   // This function loads only a part of the sequences present in the
   // file into this object. Before using LoadNextBatchNSequences a file
@@ -119,7 +120,7 @@ class SequenceFile {
   // Return:
   //    Returns 0 if successful, -1 if no more sequences can be loaded
   //    (i.e. EOF), and otherwise if unsuccessful.
-  int LoadNextBatchNSequences(uint64_t num_seqs_to_load, bool randomize_non_acgt_bases=false);
+  int LoadNextBatchNSequences(SequenceFormat seq_file_fmt, uint64_t num_seqs_to_load, bool randomize_non_acgt_bases=false);
 
   // This function loads only a part of the sequences present in the
   // file into this object. Before using LoadNextBatchInMegabytes a file
@@ -139,7 +140,7 @@ class SequenceFile {
   // Return:
   //    Returns 0 if successful, -1 if no more sequences can be loaded
   //    (i.e. EOF), and otherwise if unsuccessful.
-  int LoadNextBatchInMegabytes(uint64_t megabytes_to_load, bool randomize_non_acgt_bases=false);
+  int LoadNextBatchInMegabytes(SequenceFormat seq_file_fmt, uint64_t megabytes_to_load, bool randomize_non_acgt_bases=false);
 
   // Calculates the size of the sequences that it currently occupies in memory.
   // Calculation of size includes the sum of lengths of the headers, the data
@@ -174,14 +175,17 @@ class SequenceFile {
  private:
   SequenceVector sequences_;  // Vector holding all the sequences in the file (or in a batch).
   std::string open_file_path_;  // Path to the sequences file that is currently opened (i.e. during batch loading).
+  SequenceFormat seq_file_fmt_;
   kseq_t *bwa_seq_;  // Variable used by BWA's functions for file parsing.
-  gzFile bwa_fp_;  // File pointer for an opened FASTA/FASTQ file.
+  gzFile gzip_fp_;  // File pointer for an opened FASTA/FASTQ file.
   uint64_t current_batch_id_;  // ID of the current batch (ordinal number).
   uint64_t current_batch_starting_sequence_id_;  // Absolute ID of the first sequence in this object. If all sequences loaded at once is equal to 0, otherwise to the absolute ID of the starting sequence in the batch.
   uint64_t current_data_size_;  // When new sequences are added to this object
                                 // using the AddSequence, their size (in bytes)
                                 // is automatically calculated. Used for batch
                                 // loading of fixed size of sequences.
+
+  int LoadSeqs_(SequenceFormat seq_file_fmt, int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases);
 
   int LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases);
 
@@ -192,6 +196,9 @@ class SequenceFile {
   // Return:
   //    Returns 0 if successful.
   int LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases);
+
+  // Reads a string line from a plain/.gz file. Lines are terminated by '\n' or '\0' characters.
+  int ReadGZLine_(gzFile_s *gzip_fp, std::string &ret);
 
 };
 

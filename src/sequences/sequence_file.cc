@@ -10,6 +10,7 @@
 
 #include "sequences/sequence_file.h"
 #include "log_system/log_system.h"
+#include <sstream>
 
 //#include "bwa/kseq.h"
 //KSEQ_DECLARE(gzFile)
@@ -21,17 +22,19 @@ SequenceFile::SequenceFile() {
   Clear();
 }
 
-SequenceFile::SequenceFile(std::string file_path) {
+SequenceFile::SequenceFile(SequenceFormat seq_file_fmt, std::string file_path) {
   bwa_seq_ = NULL;
+  seq_file_fmt_ = SEQ_FORMAT_UNKNOWN;
   Clear();
-  LoadAllFromFastaOrFastq(file_path);
+  LoadAll(seq_file_fmt, file_path);
 }
 
-SequenceFile::SequenceFile(std::string file_path, uint64_t num_seqs_to_load) {
+SequenceFile::SequenceFile(SequenceFormat seq_file_fmt, std::string file_path, uint64_t num_seqs_to_load) {
   bwa_seq_ = NULL;
+  seq_file_fmt_ = seq_file_fmt;
   Clear();
   OpenFileForBatchLoading(file_path);
-  LoadNextBatchNSequences(num_seqs_to_load);
+  LoadNextBatchNSequences(seq_file_fmt, num_seqs_to_load);
 }
 
 SequenceFile::~SequenceFile() {
@@ -82,14 +85,14 @@ void SequenceFile::set_sequences(const SequenceVector& sequences) {
   sequences_ = sequences;
 }
 
-int SequenceFile::LoadAllFromFastaOrFastq(std::string file_path, bool randomize_non_acgt_bases) {
+int SequenceFile::LoadAll(SequenceFormat seq_file_fmt, std::string file_path, bool randomize_non_acgt_bases) {
   Clear();
 
   if (OpenFileForBatchLoading(file_path))
     return 1;
 
   int ret_val = 0;
-  if ((ret_val = LoadAllFromFastaOrFastqAsBatch(randomize_non_acgt_bases)) != 0) {
+  if ((ret_val = LoadAllAsBatch(seq_file_fmt, randomize_non_acgt_bases)) != 0) {
     CloseFileAfterBatchLoading();
     return ret_val;
   }
@@ -97,22 +100,53 @@ int SequenceFile::LoadAllFromFastaOrFastq(std::string file_path, bool randomize_
   return CloseFileAfterBatchLoading();
 }
 
-int SequenceFile::LoadAllFromFastaOrFastqAsBatch(bool randomize_non_acgt_bases) {
+int SequenceFile::OpenFileForBatchLoading(std::string file_path) {
+  gzip_fp_ = gzopen(file_path.c_str(), "r");
+
+  if (gzip_fp_ == NULL) {
+    FATAL_REPORT(ERR_OPENING_FILE, "File path: '%s'.", file_path.c_str());
+    return 1;
+  }
+
+  bwa_seq_ = kseq_init(gzip_fp_);
+
+  open_file_path_ = file_path;
+
+  return 0;
+}
+
+int SequenceFile::CloseFileAfterBatchLoading() {
+  if (bwa_seq_ == NULL) {
+    LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_CLOSING_FILE, "Offending variable: bwt_seq_."));
+    return 1;
+  }
+
+  kseq_destroy(bwa_seq_);
+
+  bwa_seq_ = NULL;
+  open_file_path_ = "";
+
+  gzclose(gzip_fp_);
+
+  return 0;
+}
+
+int SequenceFile::LoadAllAsBatch(SequenceFormat seq_file_fmt, bool randomize_non_acgt_bases) {
   ClearOnlyData();
 
   current_batch_id_ = 0;
   current_batch_starting_sequence_id_ = 0;
 
-  if (bwa_fp_ == NULL || bwa_seq_ == NULL)
+  if (gzip_fp_ == NULL || bwa_seq_ == NULL)
   {
-    if (bwa_fp_ == NULL)
+    if (gzip_fp_ == NULL)
       LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_OPENING_FILE, "Offending variable: bwt_fp_."));
     if (bwa_seq_ == NULL)
       LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Offending variable: bwt_seq_."));
     return 1;
   }
 
-  int64_t num_loaded_seqs = LoadSeqsFromFastq_(0, 0, randomize_non_acgt_bases);
+  int64_t num_loaded_seqs = LoadSeqs_(seq_file_fmt, 0, 0, randomize_non_acgt_bases);
 
   // If there are quality values, but for some reason the length of
   // the quality string is different from the length of the sequences
@@ -133,45 +167,14 @@ int SequenceFile::LoadAllFromFastaOrFastqAsBatch(bool randomize_non_acgt_bases) 
   return 0;
 }
 
-int SequenceFile::OpenFileForBatchLoading(std::string file_path) {
-  bwa_fp_ = gzopen(file_path.c_str(), "r");
-
-  if (bwa_fp_ == NULL) {
-    FATAL_REPORT(ERR_OPENING_FILE, "File path: '%s'.", file_path.c_str());
-    return 1;
-  }
-
-  bwa_seq_ = kseq_init(bwa_fp_);
-
-  open_file_path_ = file_path;
-
-  return 0;
-}
-
-int SequenceFile::CloseFileAfterBatchLoading() {
-  if (bwa_seq_ == NULL) {
-    LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_CLOSING_FILE, "Offending variable: bwt_seq_."));
-    return 1;
-  }
-
-  kseq_destroy(bwa_seq_);
-
-  bwa_seq_ = NULL;
-  open_file_path_ = "";
-
-  gzclose(bwa_fp_);
-
-  return 0;
-}
-
-int SequenceFile::LoadNextBatchNSequences(uint64_t num_seqs_to_load, bool randomize_non_acgt_bases) {
+int SequenceFile::LoadNextBatchNSequences(SequenceFormat seq_file_fmt, uint64_t num_seqs_to_load, bool randomize_non_acgt_bases) {
   current_batch_starting_sequence_id_ += sequences_.size();
 
   ClearOnlyData();
 
-  if (bwa_fp_ == NULL || bwa_seq_ == NULL)
+  if (gzip_fp_ == NULL || bwa_seq_ == NULL)
   {
-    if (bwa_fp_ == NULL)
+    if (gzip_fp_ == NULL)
       LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_OPENING_FILE, "Offending variable: bwt_fp_."));
     if (bwa_seq_ == NULL)
       LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Offending variable: bwt_seq_."));
@@ -179,7 +182,7 @@ int SequenceFile::LoadNextBatchNSequences(uint64_t num_seqs_to_load, bool random
   }
 
   int64_t num_loaded_seqs = 0;
-  num_loaded_seqs = LoadSeqsFromFastq_(num_seqs_to_load, 0, randomize_non_acgt_bases);
+  num_loaded_seqs = LoadSeqs_(seq_file_fmt, num_seqs_to_load, 0, randomize_non_acgt_bases);
 
   if ((bwa_seq_->qual.l > 0 && bwa_seq_->seq.l != bwa_seq_->qual.l) || num_loaded_seqs < 0) {
     ERROR_REPORT(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file! Batch ID: %ld. Absolute sequence ID: %ld. Relative sequence ID: %ld. Skipping rest of the file.", current_batch_id_, (current_batch_starting_sequence_id_ + sequences_.size()), sequences_.size());
@@ -194,14 +197,14 @@ int SequenceFile::LoadNextBatchNSequences(uint64_t num_seqs_to_load, bool random
   return 0;
 }
 
-int SequenceFile::LoadNextBatchInMegabytes(uint64_t megabytes_to_load, bool randomize_non_acgt_bases) {
+int SequenceFile::LoadNextBatchInMegabytes(SequenceFormat seq_file_fmt, uint64_t megabytes_to_load, bool randomize_non_acgt_bases) {
   current_batch_starting_sequence_id_ += sequences_.size();
 
   ClearOnlyData();
 
-  if (bwa_fp_ == NULL || bwa_seq_ == NULL)
+  if (gzip_fp_ == NULL || bwa_seq_ == NULL)
   {
-    if (bwa_fp_ == NULL)
+    if (gzip_fp_ == NULL)
       LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_OPENING_FILE, "Offending variable: bwt_fp_."));
     if (bwa_seq_ == NULL)
       LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_WRONG_PARAMS, "Offending variable: bwt_seq_."));
@@ -209,7 +212,7 @@ int SequenceFile::LoadNextBatchInMegabytes(uint64_t megabytes_to_load, bool rand
   }
 
   int64_t num_loaded_seqs = 0;
-  num_loaded_seqs = LoadSeqsFromFastq_(0, megabytes_to_load, randomize_non_acgt_bases);
+  num_loaded_seqs = LoadSeqs_(seq_file_fmt, 0, megabytes_to_load, randomize_non_acgt_bases);
 
   if ((bwa_seq_->qual.l > 0 && bwa_seq_->seq.l != bwa_seq_->qual.l) || num_loaded_seqs < 0) {
     LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file! Batch ID: %ld. Absolute sequence ID: %ld. Relative sequence ID: %ld. Skipping rest of the file.", current_batch_id_, (current_batch_starting_sequence_id_ + num_loaded_seqs), num_loaded_seqs));
@@ -254,11 +257,11 @@ void SequenceFile::Verbose(FILE *fp) {
 
   fprintf (fp, "\n");
 
-  for (SequenceVector::iterator sequence_iterator = sequences_.begin();
-      sequence_iterator != sequences_.end(); sequence_iterator++) {
-    (*sequence_iterator)->Verbose(fp);
-    fprintf (fp, "\n");
-  }
+//  for (SequenceVector::iterator sequence_iterator = sequences_.begin();
+//      sequence_iterator != sequences_.end(); sequence_iterator++) {
+//    (*sequence_iterator)->Verbose(fp);
+//    fprintf (fp, "\n");
+//  }
 
   fflush(fp);
 }
@@ -277,6 +280,21 @@ uint64_t SequenceFile::get_current_batch_starting_sequence_id() const {
 
 void SequenceFile::set_current_batch_starting_sequence_id(uint64_t currentBatchStartingSequenceId) {
   current_batch_starting_sequence_id_ = currentBatchStartingSequenceId;
+}
+
+int SequenceFile::LoadSeqs_(SequenceFormat seq_file_fmt, int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases) {
+  if (seq_file_fmt == SEQ_FORMAT_FASTQ) {
+    return LoadSeqsFromFastq_(num_seqs_to_load, megabytes_to_load, randomize_non_acgt_bases);
+
+  } else if (seq_file_fmt == SEQ_FORMAT_GFA) {
+    return LoadSeqsFromGFA_(num_seqs_to_load, megabytes_to_load, randomize_non_acgt_bases);
+
+  } else {
+    return 1;
+
+  }
+
+  return 0;
 }
 
 int SequenceFile::LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases) {
@@ -329,6 +347,76 @@ int SequenceFile::LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes
 
   if (l == -2)
     return -2;
+
+  return id;
+}
+
+int SequenceFile::ReadGZLine_(gzFile_s *gzip_fp, std::string &ret) {
+  const int32_t BUFF_SIZE = 4096;
+  int8_t buff[BUFF_SIZE + 1];
+  std::stringstream ss;
+  int32_t ret_len = 0;
+  int32_t read_bytes = 0;
+  bool ln_end_found = false;
+  while ((read_bytes = gzread(gzip_fp, &buff[0], BUFF_SIZE)) > 0) {
+    buff[read_bytes] = '\0';
+    for (int32_t i=0; i<read_bytes; i++) {
+      if (buff[i] == '\n') {
+        buff[i] = '\0';
+        gzseek(gzip_fp, -(read_bytes - i - 1), SEEK_CUR);
+        ln_end_found = true;
+        break;
+      }
+    }
+    std::string buff_str((char *) &buff[0]);
+    ss << buff_str;
+    ret_len += buff_str.length();
+
+    if (ln_end_found) break;
+  }
+
+  ret = ss.str();
+  if (ret_len > 0) return 0;
+
+  return 1;
+}
+
+int SequenceFile::LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases) {
+  uint64_t id = 0;
+  uint64_t id_absolute = current_batch_starting_sequence_id_;
+  SingleSequence *sequence = NULL;
+  std::string line;
+
+  while (!ReadGZLine_(gzip_fp_, line)) {
+    sequence = new SingleSequence();
+
+    std::istringstream ss(line);
+    std::string keyword;
+    ss >> keyword;
+
+    if (keyword == "S") {
+      std::string header;
+      std::string seq;
+      std::string ln;
+      ss >> header >> seq >> ln;
+
+      sequence->InitHeaderAndDataFromAscii((char *) header.c_str(),
+                                                header.length(),
+                                                (int8_t *) seq.c_str(), seq.length(), id, id_absolute);
+
+      if (randomize_non_acgt_bases == true)
+        sequence->RandomizeNonACGTBases();
+
+      AddSequence(sequence);
+      id += 1;  // Increment the relative sequence id counter.
+      id_absolute += 1;
+
+      if (num_seqs_to_load > 0 && id >= num_seqs_to_load)  // Batch loading stopping condition.
+        break;
+      if (megabytes_to_load > 0 && ConvertFromBytes(MEMORY_UNIT_MEGABYTE, current_data_size_) >= megabytes_to_load)  // Batch loading stopping condition.
+        break;
+    }
+  }
 
   return id;
 }
