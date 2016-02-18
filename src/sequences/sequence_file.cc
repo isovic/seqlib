@@ -11,6 +11,7 @@
 #include "sequences/sequence_file.h"
 #include "log_system/log_system.h"
 #include <sstream>
+#include <algorithm>
 
 //#include "bwa/kseq.h"
 //KSEQ_DECLARE(gzFile)
@@ -26,9 +27,8 @@ SequenceFile::SequenceFile(std::string file_path) {
   bwa_seq_ = NULL;
   Clear();
 
-  SequenceFormat seq_file_fmt = SeqFmtToString(file_path.substr(file_path.find_last_of(".") + 1));
-  seq_file_fmt_ = seq_file_fmt;
-  LoadAll(seq_file_fmt, file_path);
+  seq_file_fmt_ = SEQ_FORMAT_AUTO;
+  LoadAll(seq_file_fmt_, file_path);
 }
 
 SequenceFile::SequenceFile(SequenceFormat seq_file_fmt, std::string file_path) {
@@ -291,7 +291,22 @@ void SequenceFile::set_current_batch_starting_sequence_id(uint64_t currentBatchS
   current_batch_starting_sequence_id_ = currentBatchStartingSequenceId;
 }
 
+std::string SequenceFile::GetFileExt_(std::string path) {
+  int32_t pos = path.find_last_of(".");
+  std::string ext = path.substr(pos + 1);
+  if (ext == "gz") {
+    ext = path.substr(path.find_last_of(".", (pos-1)) + 1);
+//    printf ("ext = %s\n", ext.c_str());
+  }
+  std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+  return ext;
+}
+
 int SequenceFile::LoadSeqs_(SequenceFormat seq_file_fmt, int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases) {
+  if (seq_file_fmt == SEQ_FORMAT_AUTO) {
+    seq_file_fmt = SeqFmtToString(GetFileExt_(open_file_path_));
+  }
+
   if (seq_file_fmt == SEQ_FORMAT_FASTQ) {
     return LoadSeqsFromFastq_(num_seqs_to_load, megabytes_to_load, randomize_non_acgt_bases);
 

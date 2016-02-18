@@ -26,14 +26,17 @@
 
 #include "sequences/kseq.h"
 
-#define SeqFmtToString(x) (x == "fasta" || x == "fastq" || x == "fa" || x == "fq") ? (SEQ_FORMAT_FASTQ) : (x == "gfa") ? (SEQ_FORMAT_GFA) : (x == "sam") ? (SEQ_FORMAT_SAM) : (SEQ_FORMAT_UNKNOWN)
+#define SeqFmtToString(x) (x == "fasta" || x == "fastq" || x == "fa" || x == "fq" || x == "fasta.gz" || x == "fastq.gz" || x == "fa.gz" || x == "fq.gz") ? (SEQ_FORMAT_FASTQ) : \
+        (x == "gfa" || x == "gfa.gz") ? (SEQ_FORMAT_GFA) : \
+        (x == "sam" || x == "sam.gz") ? (SEQ_FORMAT_SAM) : (x == "auto") ? (SEQ_FORMAT_AUTO) : (SEQ_FORMAT_UNKNOWN)
 
 enum SequenceFormat {
   SEQ_FORMAT_UNKNOWN = 0,
-  SEQ_FORMAT_FASTQ = 1,     // Reads either FASTA or FASTQ.
-  SEQ_FORMAT_GFA = 2,       // Reads the Graphical Assembly Format
-  SEQ_FORMAT_SAM = 3        // Reads the Sequence Alignment/Mapping Format.
-//  SEQ_FORMAT_BAM = 4      // TODO: Not implemented yet.
+  SEQ_FORMAT_AUTO = 1,
+  SEQ_FORMAT_FASTQ = 2,     // Reads either FASTA or FASTQ.
+  SEQ_FORMAT_GFA = 3,       // Reads the Graphical Assembly Format
+  SEQ_FORMAT_SAM = 4,        // Reads the Sequence Alignment/Mapping Format.
+//  SEQ_FORMAT_BAM = 5      // TODO: Not implemented yet.
 };
 
 //KSEQ_DECLARE(gzFile)
@@ -214,6 +217,7 @@ class SequenceFile {
   // Reads a string line from a plain/.gz file. Lines are terminated by '\n' or '\0' characters.
   int ReadGZLine_(gzFile_s *gzip_fp, std::string &ret);
 
+  std::string GetFileExt_(std::string path);
 };
 
 #endif /* SEQUENCEFILE_H_ */
