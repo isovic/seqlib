@@ -22,17 +22,26 @@ SequenceFile::SequenceFile() {
   Clear();
 }
 
+SequenceFile::SequenceFile(std::string file_path) {
+  bwa_seq_ = NULL;
+  Clear();
+
+  SequenceFormat seq_file_fmt = SeqFmtToString(file_path.substr(file_path.find_last_of(".") + 1));
+  seq_file_fmt_ = seq_file_fmt;
+  LoadAll(seq_file_fmt, file_path);
+}
+
 SequenceFile::SequenceFile(SequenceFormat seq_file_fmt, std::string file_path) {
   bwa_seq_ = NULL;
-  seq_file_fmt_ = SEQ_FORMAT_UNKNOWN;
   Clear();
+  seq_file_fmt_ = seq_file_fmt;
   LoadAll(seq_file_fmt, file_path);
 }
 
 SequenceFile::SequenceFile(SequenceFormat seq_file_fmt, std::string file_path, uint64_t num_seqs_to_load) {
   bwa_seq_ = NULL;
-  seq_file_fmt_ = seq_file_fmt;
   Clear();
+  seq_file_fmt_ = seq_file_fmt;
   OpenFileForBatchLoading(file_path);
   LoadNextBatchNSequences(seq_file_fmt, num_seqs_to_load);
 }
@@ -293,8 +302,8 @@ int SequenceFile::LoadSeqs_(SequenceFormat seq_file_fmt, int64_t num_seqs_to_loa
     return LoadSeqsFromSAM_(num_seqs_to_load, megabytes_to_load, randomize_non_acgt_bases);
 
   } else {
-    return 1;
-
+    FATAL_REPORT(ERR_UNEXPECTED_VALUE, "Input sequence file format unknown!\n");
+    return -1;
   }
 
   return 0;

@@ -26,6 +26,8 @@
 
 #include "sequences/kseq.h"
 
+#define SeqFmtToString(x) (x == "fasta" || x == "fastq" || x == "fa" || x == "fq") ? (SEQ_FORMAT_FASTQ) : (x == "gfa") ? (SEQ_FORMAT_GFA) : (x == "sam") ? (SEQ_FORMAT_SAM) : (SEQ_FORMAT_UNKNOWN)
+
 enum SequenceFormat {
   SEQ_FORMAT_UNKNOWN = 0,
   SEQ_FORMAT_FASTQ = 1,     // Reads either FASTA or FASTQ.
@@ -60,7 +62,10 @@ class SequenceFile {
  public:
   SequenceFile();
 
-  // Initializes the object, and calls LoadAllFromFastaOrFastq.
+  // Initializes the object, and calls LoadAll, with the extension of the file_path as the in format.
+  SequenceFile(std::string file_path);
+
+  // Initializes the object, and calls LoadAll.
   SequenceFile(SequenceFormat seq_file_fmt, std::string file_path);
 
   // Initializes the object, and calls OpenFileForBatchLoading and
