@@ -289,6 +289,9 @@ int SequenceFile::LoadSeqs_(SequenceFormat seq_file_fmt, int64_t num_seqs_to_loa
   } else if (seq_file_fmt == SEQ_FORMAT_GFA) {
     return LoadSeqsFromGFA_(num_seqs_to_load, megabytes_to_load, randomize_non_acgt_bases);
 
+  } else if (seq_file_fmt == SEQ_FORMAT_SAM) {
+    return LoadSeqsFromSAM_(num_seqs_to_load, megabytes_to_load, randomize_non_acgt_bases);
+
   } else {
     return 1;
 
@@ -358,6 +361,8 @@ int SequenceFile::ReadGZLine_(gzFile_s *gzip_fp, std::string &ret) {
   int32_t ret_len = 0;
   int32_t read_bytes = 0;
   bool ln_end_found = false;
+  int32_t ln_end_pos = 0;
+  bool is_eof = false;
   while ((read_bytes = gzread(gzip_fp, &buff[0], BUFF_SIZE)) > 0) {
     buff[read_bytes] = '\0';
     for (int32_t i=0; i<read_bytes; i++) {
@@ -365,6 +370,7 @@ int SequenceFile::ReadGZLine_(gzFile_s *gzip_fp, std::string &ret) {
         buff[i] = '\0';
         gzseek(gzip_fp, -(read_bytes - i - 1), SEEK_CUR);
         ln_end_found = true;
+        ln_end_pos = i;
         break;
       }
     }
@@ -376,7 +382,8 @@ int SequenceFile::ReadGZLine_(gzFile_s *gzip_fp, std::string &ret) {
   }
 
   ret = ss.str();
-  if (ret_len > 0) return 0;
+  // This allows for empty lines to be output as well (but not if there is an EOF, i.e. read_bytes == 0).
+  if (ret_len > 0 || read_bytes > 0) return 0;
 
   return 1;
 }
@@ -404,6 +411,66 @@ int SequenceFile::LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_t
                                                 header.length(),
                                                 (int8_t *) seq.c_str(), seq.length(), id, id_absolute);
 
+      if (randomize_non_acgt_bases == true)
+        sequence->RandomizeNonACGTBases();
+
+      AddSequence(sequence);
+      id += 1;  // Increment the relative sequence id counter.
+      id_absolute += 1;
+
+      if (num_seqs_to_load > 0 && id >= num_seqs_to_load)  // Batch loading stopping condition.
+        break;
+      if (megabytes_to_load > 0 && ConvertFromBytes(MEMORY_UNIT_MEGABYTE, current_data_size_) >= megabytes_to_load)  // Batch loading stopping condition.
+        break;
+    }
+  }
+
+  return id;
+}
+
+int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases) {
+  uint64_t id = 0;
+  uint64_t id_absolute = current_batch_starting_sequence_id_;
+  SingleSequence *sequence = NULL;
+  std::string line;
+
+  std::string sam_header = "";
+
+  while (!ReadGZLine_(gzip_fp_, line)) {
+    if (line.size() == 0) continue;
+
+//    printf ("%s\n", line.c_str());
+
+    if (line[0] == '@') {
+      sam_header += line;
+
+    } else {
+      sequence = new SingleSequence();
+      SequenceAlignment aln;
+      std::istringstream ss(line);
+      std::string seq;
+      std::string qual;
+
+      ss >> aln.qname >> aln.flag >> aln.rname >> aln.pos >> aln.mapq >> aln.cigar >> aln.rnext >> aln.pnext >> aln.tlen >> seq >> qual;
+
+      // Load optional parameters from a SAM line.
+      std::string opt_par;
+      while (ss >> opt_par) {
+        aln.optional.push_back(opt_par);
+      }
+      aln.ProcessOptional();
+
+      if (qual == "*") {
+        sequence->InitHeaderAndDataFromAscii((char *) aln.qname.c_str(),
+                                                  aln.qname.length(),
+                                                  (int8_t *) seq.c_str(), seq.length(), id, id_absolute);
+      } else {
+        sequence->InitAllFromAscii((char *) aln.qname.c_str(), aln.qname.length(),
+                                   (int8_t *) seq.c_str(), (int8_t *) qual.c_str(), seq.length(),
+                                   id, id_absolute);
+      }
+
+      sequence->InitAlignment(aln);
       if (randomize_non_acgt_bases == true)
         sequence->RandomizeNonACGTBases();
 

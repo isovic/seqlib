@@ -10,6 +10,7 @@
 
 #include <random>
 #include <string.h>
+#include <sstream>
 #include "sequences/single_sequence.h"
 #include "log_system/log_system.h"
 #include "utility/utility_conversion-inl.h"
@@ -448,6 +449,46 @@ int SingleSequence::ConvertDataFormatFromAscii_(DataFormat new_data_format) {
   return 0;
 }
 
+int SingleSequence::InitAlignment(const SequenceAlignment& aln) {
+  aln_.CopyFrom(aln);
+  return 0;
+}
+
+std::string SingleSequence::MakeSAMLine() const {
+  std::stringstream ss;
+  if (aln_.flag & 4) {
+    ss << aln_.qname << "\t" <<
+          aln_.flag << "\t" <<
+          "*" << "\t" <<
+          "0" << "\t" <<
+          "0" << "\t" <<
+          "*" << "\t" <<
+          "*" << "\t" <<
+          "0" << "\t" <<
+          "0" << "\t" <<
+          (char *) data_ << "\t";
+    if (quality_ != NULL) ss << (char *) quality_;
+    else ss << "*";
+
+  } else {
+    ss << aln_.qname << "\t" <<
+          aln_.flag << "\t" <<
+          aln_.rname << "\t" <<
+          aln_.pos << "\t" <<
+          aln_.mapq << "\t" <<
+          aln_.cigar << "\t" <<
+          aln_.rnext << "\t" <<
+          aln_.pnext << "\t" <<
+          aln_.tlen << "\t";
+    if (quality_ != NULL) ss << (char *) quality_;
+    else ss << "*";
+    for (int32_t i=0; i<aln_.optional.size(); i++) {
+      ss << "\t" << aln_.optional[i];
+    }
+  }
+  return ss.str();
+}
+
 int SingleSequence::ConvertDataFormatToAscii_() {
   if (data_format_ == kDataFormatAscii) {
     data_format_ = kDataFormatAscii;
@@ -534,6 +575,7 @@ void SingleSequence::CopyFrom(const SingleSequence &op1) {
   this->sequence_id_ = op1.sequence_id_;
   this->sequence_absolute_id_ = op1.sequence_absolute_id_;
   this->data_format_ = op1.data_format_;
+  this->InitAlignment(op1.aln_);
 }
 
 int8_t * SingleSequence::GetReverseComplement() const {
@@ -787,4 +829,12 @@ uint64_t SingleSequence::CalcNumberNBases() const {
   }
 
   return ret;
+}
+
+const SequenceAlignment& SingleSequence::get_aln() const {
+  return aln_;
+}
+
+void SingleSequence::set_aln(const SequenceAlignment& aln) {
+  aln_ = aln;
 }

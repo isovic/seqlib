@@ -21,6 +21,7 @@
 //#include "bwa/kvec.h"
 //#include "sequences/utils.h"
 #include "sequences/single_sequence.h"
+#include "sequences/sequence_alignment.h"
 #include "utility/utility_conversion-inl.h"
 
 #include "sequences/kseq.h"
@@ -28,8 +29,8 @@
 enum SequenceFormat {
   SEQ_FORMAT_UNKNOWN = 0,
   SEQ_FORMAT_FASTQ = 1,     // Reads either FASTA or FASTQ.
-  SEQ_FORMAT_GFA = 2        // Reads the Graphical Assembly Format
-//  SEQ_FORMAT_SAM = 3,     // TODO: Not implemented yet.
+  SEQ_FORMAT_GFA = 2,       // Reads the Graphical Assembly Format
+  SEQ_FORMAT_SAM = 3        // Reads the Sequence Alignment/Mapping Format.
 //  SEQ_FORMAT_BAM = 4      // TODO: Not implemented yet.
 };
 
@@ -196,6 +197,14 @@ class SequenceFile {
   // Return:
   //    Returns 0 if successful.
   int LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases);
+
+  // Given the path to a SAM file, this function loads all
+  // sequences and their alignments present in the file into this object.
+  // Input:
+  //    file_path - Path to the SAM file.
+  // Return:
+  //    Returns 0 if successful.
+  int LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases);
 
   // Reads a string line from a plain/.gz file. Lines are terminated by '\n' or '\0' characters.
   int ReadGZLine_(gzFile_s *gzip_fp, std::string &ret);
