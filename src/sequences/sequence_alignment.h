@@ -24,6 +24,8 @@
 typedef struct {
   char op = '-';
   int32_t count = 0;
+  int64_t pos_ref = -1;
+  int64_t pos_query = - 1;
 } CigarOp ;
 
 class SequenceAlignment {
@@ -34,22 +36,29 @@ class SequenceAlignment {
   void CopyFrom(const SequenceAlignment &aln);
   // Parses optional parameters (from member optional) to obtain values for 'as', 'evalue', etc.
   void ProcessOptional();
-  int GetSplitCigar(std::vector<CigarOp> &ret) const;
   int64_t GetReferenceLengthFromCigar() const;
   int64_t GetQueryLengthFromCigar() const;
+  // Parameter cigar_id is the ID (ordinal number) of the cigar operation where the position was found in. Optional.
+  int64_t FindBasePositionOnRead(const std::vector<CigarOp>& split_cigar, int64_t pos, int64_t *cigar_id=NULL) const;
+  // Parameter cigar_id is the ID (ordinal number) of the cigar operation where the position was found in. Optional.
+  int64_t FindBasePositionOnRef(const std::vector<CigarOp>& split_cigar, int64_t pos, int64_t *cigar_id=NULL) const;
+  std::string GetCigarString() const;
+
   bool IsMapped() const;
 
   static int SplitCigar(const std::string &cigar_str, std::vector<CigarOp>& ret);
 
   static int CalcReferenceLengthFromCigar(const std::vector<CigarOp>& split_cigar, int64_t &ret_ref_len);
   static int CalcQueryLengthFromCigar(const std::vector<CigarOp>& split_cigar, int64_t &ret_query_len);
+  static std::string MakeCigarString(const std::vector<CigarOp>& split_cigar);
 
-  std::string qname;    // Field #1.
+//  std::string qname;    // Field #1.
   uint32_t flag;        // Field #2.
   std::string rname;    // Field #3.
   int64_t pos;          // Field #4.
   int32_t mapq;         // Field #5.
-  std::string cigar;    // Field #6.
+//  std::string cigar;    // Field #6.
+  std::vector<CigarOp> cigar;
   std::string rnext;    // Field #7.
   int64_t pnext;        // Field #8.
   int64_t tlen;         // Field #9.

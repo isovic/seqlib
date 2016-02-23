@@ -7,14 +7,17 @@
 
 #include "sequence_alignment.h"
 #include <math.h>
+#include <sstream>
 
 SequenceAlignment::SequenceAlignment() {
-  qname = rname = cigar = rnext = "";
+//  qname = "";
+  rname = rnext = "";
   flag = 4;
   pos = pnext = tlen = as = 0;
   mapq = 0;
   evalue = 0.0;
   optional.clear();
+  cigar.clear();
 }
 
 SequenceAlignment::~SequenceAlignment() {
@@ -22,7 +25,7 @@ SequenceAlignment::~SequenceAlignment() {
 }
 
 void SequenceAlignment::CopyFrom(const SequenceAlignment& aln) {
-  this->qname = aln.qname;
+//  this->qname = aln.qname;
   this->flag = aln.flag;
   this->rname = aln.rname;
   this->pos = aln.pos;
@@ -43,25 +46,30 @@ void SequenceAlignment::ProcessOptional() {
 //    }
   }
 }
-
-int SequenceAlignment::GetSplitCigar(std::vector<CigarOp>& ret) const {
-  SplitCigar(cigar, ret);
-  return 0;
-}
+//
+//int SequenceAlignment::GetSplitCigar(std::vector<CigarOp>& ret) const {
+//  SplitCigar(cigar, ret);
+//  return 0;
+//}
 
 int SequenceAlignment::SplitCigar(const std::string &cigar_str, std::vector<CigarOp>& ret) {
   ret.clear();
   CigarOp op;
   int32_t digit_count = 0;
-  const char *first_num = NULL;
+  int64_t pos_ref = 0, pos_query = 0;
+  const char *first_digit = NULL;
   for (int64_t i=0; i<cigar_str.size(); i++) {
     if (isalpha(cigar_str[i]) || cigar_str[i] == '=') {
+      op.pos_ref = pos_ref;
+      op.pos_query = pos_query;
       op.op = cigar_str[i];
-      sscanf(first_num, "%d", &op.count);
+      sscanf(first_digit, "%d", &op.count);
       ret.push_back(op);
-      first_num = NULL;
-    } else if (first_num == NULL) {
-      first_num = &(cigar_str[i]);
+      first_digit = NULL;
+      if (is_cigar_ref(op.op)) pos_ref += op.count;
+      if (is_cigar_read(op.op)) pos_query += op.count;
+    } else if (first_digit == NULL) {
+      first_digit = &(cigar_str[i]);
     }
   }
   return 0;
@@ -80,6 +88,58 @@ bool SequenceAlignment::IsMapped() const {
   return (!(flag & 4));
 }
 
+int64_t SequenceAlignment::FindBasePositionOnRead(const std::vector<CigarOp>&  split_cigar, int64_t pos_on_ref, int64_t *cigar_id) const {
+  int64_t aligned_pos = (this->pos > 0) ? (this->pos - 1) : 0;      // pos field of the SAM file is 1-based. If the value is <= 0, then something is not set right, and ignore this value.
+  for (int64_t i=0; i<split_cigar.size(); i++) {
+    char op = split_cigar[i].op;
+    int64_t cig_pos_ref = split_cigar[i].pos_ref + aligned_pos;
+    if (is_cigar_match(op)) {
+      if (pos_on_ref >= cig_pos_ref && pos_on_ref < (cig_pos_ref + split_cigar[i].count)) {
+        if (cigar_id != NULL) *cigar_id = i;
+        return (split_cigar[i].pos_query + (pos_on_ref - cig_pos_ref));
+      }
+    } else if (is_cigar_del(op)) {
+      if (pos_on_ref >= cig_pos_ref && pos_on_ref < (cig_pos_ref + split_cigar[i].count)) {
+        if (cigar_id != NULL) *cigar_id = i;
+        return (split_cigar[i].pos_query);
+      }
+    }
+  }
+  return -1;
+}
+
+int64_t SequenceAlignment::FindBasePositionOnRef(const std::vector<CigarOp>& split_cigar, int64_t pos_on_read, int64_t *cigar_id) const {
+  int64_t aligned_pos = (this->pos > 0) ? (this->pos - 1) : 0;      // pos field of the SAM file is 1-based. If the value is <= 0, then something is not set right, and ignore this value.
+  for (int64_t i=0; i<split_cigar.size(); i++) {
+    char op = split_cigar[i].op;
+    int64_t cig_pos_ref = split_cigar[i].pos_ref + aligned_pos;
+    if (is_cigar_match(op)) {
+      if (pos_on_read >= split_cigar[i].pos_query && pos_on_read < (split_cigar[i].pos_query + split_cigar[i].count)) {
+        if (cigar_id != NULL) *cigar_id = i;
+        return (split_cigar[i].pos_ref + aligned_pos + (pos_on_read - split_cigar[i].pos_query));
+      }
+    } else if (is_cigar_ins(op)) {
+      if (pos_on_read >= split_cigar[i].pos_query && pos_on_read < (split_cigar[i].pos_query + split_cigar[i].count)) {
+        if (cigar_id != NULL) *cigar_id = i;
+        return (split_cigar[i].pos_ref + aligned_pos);
+      }
+    }
+  }
+  return -1;
+}
+
+std::string SequenceAlignment::GetCigarString() const {
+  return MakeCigarString(cigar);
+}
+
+std::string SequenceAlignment::MakeCigarString(const std::vector<CigarOp>& split_cigar) {
+  std::stringstream ss;
+  for (int64_t i=0; i<split_cigar.size(); i++) {
+    ss << split_cigar[i].count << split_cigar[i].op;
+  }
+  return ss.str();
+}
+
 int SequenceAlignment::CalcQueryLengthFromCigar(const std::vector<CigarOp>& split_cigar, int64_t& ret_query_len) {
   int64_t len = 0;
   for (int64_t i=0; i<split_cigar.size(); i++) {
@@ -92,16 +152,12 @@ int SequenceAlignment::CalcQueryLengthFromCigar(const std::vector<CigarOp>& spli
 
 int64_t SequenceAlignment::GetReferenceLengthFromCigar() const {
   int64_t len = 0;
-  std::vector<CigarOp> split_cigar;
-  SplitCigar(cigar, split_cigar);
-  CalcReferenceLengthFromCigar(split_cigar, len);
+  CalcReferenceLengthFromCigar(cigar, len);
   return len;
 }
 
 int64_t SequenceAlignment::GetQueryLengthFromCigar() const {
   int64_t len = 0;
-  std::vector<CigarOp> split_cigar;
-  SplitCigar(cigar, split_cigar);
-  CalcQueryLengthFromCigar(split_cigar, len);
+  CalcQueryLengthFromCigar(cigar, len);
   return len;
 }

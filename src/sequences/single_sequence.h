@@ -74,6 +74,11 @@ class SingleSequence {
   //    Returns 0 if successful.
   int InitHeader(char *header, uint32_t header_length);
 
+  // Sets only the header of a SingleSequence object.
+  // Same as InitHeader(char *header, uint32_t header_length), but initializes
+  // from a std::string.
+  int InitHeader(std::string header);
+
   // Sets only the alignment info of the sequence from a given existing
   // alignment object.
   // Inputs:
@@ -244,6 +249,9 @@ class SingleSequence {
   //    Returns the size of the sequence occupying this container.
   uint64_t CalculateTotalSize(SFMemoryUnit memory_unit = kMemoryUnitByte);
 
+  // Calculates the average base quality, if quality scores are provided.
+  double CalcAverageBQ() const;
+
   // Converts the sequence data between ASCII, 2 bit sparse and 2 bit dense
   // formats. Sequence data of this object is replaced with the converted
   // value.
@@ -301,7 +309,10 @@ class SingleSequence {
 
   // Extracts a substring from the sequence, and converts it to ASCII
   // format if needed, and returns the substring as std::string.
-  std::string GetSubstring(uint64_t start=0, uint64_t end=0) const;
+  std::string GetSequenceAsString(uint64_t start=0, uint64_t end=0) const;
+
+  // Extracts a substring from the quality scores.
+  std::string GetQualityAsString(uint64_t start=0, uint64_t end=0) const;
 
   // Outputs the contents of this object to the stream given by file pointer.
   // Inputs:
@@ -313,6 +324,14 @@ class SingleSequence {
   // will be unaligned.
   std::string MakeSAMLine() const;
 
+  // Creates a FASTA formatted string of two lines separated by a '\n'.
+  std::string MakeFASTALine() const;
+
+  // Creates a FASTQ formatted string of four lines separated by a '\n'.
+  // If the sequence does not contain the quality values, the line is formatted as FASTA.
+  std::string MakeFASTQLine() const;
+
+  // Just sets the pointer of the header_ to header. Does not copy the data.
   void set_header(char *header);
   char *get_header() const;
   void set_data(int8_t *data);
@@ -370,6 +389,8 @@ class SingleSequence {
   // formats. Sequence data of this object is replaced with the converted
   // value.
   int ConvertDataFormatToAscii_();
+
+  std::string TrimStringToFirstSpace_(std::string original_string) const;
 
   char *header_;  // C-style string that holds the header of a sequence (i.e. FASTA or FASTQ headers).
   int8_t *data_;  // Sequence data which can be stored in any of the supported data formats.

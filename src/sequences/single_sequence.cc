@@ -113,6 +113,10 @@ int SingleSequence::InitHeader(char *header, uint32_t header_length) {
   return 0;
 }
 
+int SingleSequence::InitHeader(std::string header) {
+  return InitHeader((char *) header.c_str(), (uint32_t) header.size());
+}
+
 int SingleSequence::InitQuality(int8_t* quality, uint64_t quality_length) {
   if (quality_)
     delete[] quality_;
@@ -457,7 +461,7 @@ int SingleSequence::InitAlignment(const SequenceAlignment& aln) {
 std::string SingleSequence::MakeSAMLine() const {
   std::stringstream ss;
   if (aln_.flag & 4) {
-    ss << aln_.qname << "\t" <<
+    ss << TrimStringToFirstSpace_(std::string(header_)) << "\t" <<
           aln_.flag << "\t" <<
           "*" << "\t" <<
           "0" << "\t" <<
@@ -466,20 +470,21 @@ std::string SingleSequence::MakeSAMLine() const {
           "*" << "\t" <<
           "0" << "\t" <<
           "0" << "\t" <<
-          (char *) data_ << "\t";
+          GetSequenceAsString(0, 0) << "\t";
     if (quality_ != NULL) ss << (char *) quality_;
     else ss << "*";
 
   } else {
-    ss << aln_.qname << "\t" <<
+    ss << TrimStringToFirstSpace_(std::string(header_)) << "\t" <<
           aln_.flag << "\t" <<
           aln_.rname << "\t" <<
           aln_.pos << "\t" <<
           aln_.mapq << "\t" <<
-          aln_.cigar << "\t" <<
+          aln_.GetCigarString() << "\t" <<
           aln_.rnext << "\t" <<
           aln_.pnext << "\t" <<
-          aln_.tlen << "\t";
+          aln_.tlen << "\t" <<
+          GetSequenceAsString(0, 0) << "\t";
     if (quality_ != NULL) ss << (char *) quality_;
     else ss << "*";
     for (int32_t i=0; i<aln_.optional.size(); i++) {
@@ -487,6 +492,40 @@ std::string SingleSequence::MakeSAMLine() const {
     }
   }
   return ss.str();
+}
+
+std::string SingleSequence::MakeFASTALine() const {
+  std::stringstream ss;
+  ss << ">" << header_ << "\n";
+  ss << GetSequenceAsString(0, 0);
+  return ss.str();
+}
+
+std::string SingleSequence::MakeFASTQLine() const {
+  if (quality_ != NULL) {
+    std::stringstream ss;
+    ss << "@" << header_ << "\n";
+    ss << GetSequenceAsString(0, 0) << "\n";
+    ss << "+" << "\n";
+    ss << GetQualityAsString(0, 0);
+    return ss.str();
+  }
+
+  return MakeFASTALine();
+}
+
+double SingleSequence::CalcAverageBQ() const {
+  if (quality_ == NULL) { return 100.0; }
+  if (sequence_length_ == 0) { return 0.0; }
+
+  double ret = 0.0;
+
+  for (int64_t i=0; i<sequence_length_; i++) {
+    ret += ((double) quality_[i] - 33);
+  }
+  ret /= (double) sequence_length_;
+
+  return ret;
 }
 
 int SingleSequence::ConvertDataFormatToAscii_() {
@@ -775,7 +814,7 @@ int SingleSequence::RandomizeNonACGTBases() {
 	return 0;
 }
 
-std::string SingleSequence::GetSubstring(uint64_t start, uint64_t end) const {
+std::string SingleSequence::GetSequenceAsString(uint64_t start, uint64_t end) const {
   std::string ret = "";
 
   if (start > sequence_length_)
@@ -802,6 +841,14 @@ std::string SingleSequence::GetSubstring(uint64_t start, uint64_t end) const {
   }
 
   return ret;
+}
+
+std::string SingleSequence::GetQualityAsString(uint64_t start, uint64_t end) const {
+  std::stringstream ss;
+  char *temp = (char *) quality_;
+  for (int64_t i=start; i<end; i++)
+    ss << temp[i];
+  return ss.str();
 }
 
 uint64_t SingleSequence::GetNumberOfBases() const {
@@ -837,4 +884,16 @@ const SequenceAlignment& SingleSequence::get_aln() const {
 
 void SingleSequence::set_aln(const SequenceAlignment& aln) {
   aln_ = aln;
+}
+
+std::string SingleSequence::TrimStringToFirstSpace_(std::string original_string) const {
+  std::string::size_type loc = original_string.find(" ", 0);
+  if (loc != std::string::npos) {
+    return original_string.substr(0, loc);
+
+  } else {
+    // There is no spaces in the string, do nothing and just report it as is.
+    return original_string;
+  }
+  return std::string("");
 }

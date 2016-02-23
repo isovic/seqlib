@@ -472,10 +472,13 @@ int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_t
       sequence = new SingleSequence();
       SequenceAlignment aln;
       std::istringstream ss(line);
+      std::string header;
       std::string seq;
       std::string qual;
+      std::string cigar_string;
 
-      ss >> aln.qname >> aln.flag >> aln.rname >> aln.pos >> aln.mapq >> aln.cigar >> aln.rnext >> aln.pnext >> aln.tlen >> seq >> qual;
+      ss >> header >> aln.flag >> aln.rname >> aln.pos >> aln.mapq >> cigar_string >> aln.rnext >> aln.pnext >> aln.tlen >> seq >> qual;
+      SequenceAlignment::SplitCigar(cigar_string, aln.cigar);
 
       // Load optional parameters from a SAM line.
       std::string opt_par;
@@ -485,11 +488,11 @@ int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_t
       aln.ProcessOptional();
 
       if (qual == "*") {
-        sequence->InitHeaderAndDataFromAscii((char *) aln.qname.c_str(),
-                                                  aln.qname.length(),
+        sequence->InitHeaderAndDataFromAscii((char *) header.c_str(),
+                                             header.length(),
                                                   (int8_t *) seq.c_str(), seq.length(), id, id_absolute);
       } else {
-        sequence->InitAllFromAscii((char *) aln.qname.c_str(), aln.qname.length(),
+        sequence->InitAllFromAscii((char *) header.c_str(), header.length(),
                                    (int8_t *) seq.c_str(), (int8_t *) qual.c_str(), seq.length(),
                                    id, id_absolute);
       }

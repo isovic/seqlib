@@ -18,6 +18,7 @@
 #define LOG_NOHEADER(...)         LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL, true, LogSystem::FormatString(__VA_ARGS__), std::string("[]"));
 #define LOG_ALL(...)        LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL, true, LogSystem::FormatString(__VA_ARGS__), std::string(__FUNCTION__)); // , std::string(__FILE__), __LINE__);
 #define LOG_DEBUG(...)      LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL_DEBUG, true, LogSystem::FormatString(__VA_ARGS__), std::string(__FUNCTION__), std::string(__FILE__), __LINE__);
+#define LOG_DEBUG_NOHEADER(...)      LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL_DEBUG, true, LogSystem::FormatString(__VA_ARGS__), std::string("[]"), std::string(__FILE__), __LINE__);
 #define LOG_DEBUG_SPEC(...) LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL_DEBUG, read->get_sequence_id() == parameters->debug_read, LogSystem::FormatString(__VA_ARGS__), std::string(__FUNCTION__), std::string(__FILE__), __LINE__);
 
 #define ERROR_REPORT(error_code, ...)   LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(error_code, __VA_ARGS__));
