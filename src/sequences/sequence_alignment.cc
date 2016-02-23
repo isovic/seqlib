@@ -93,15 +93,11 @@ int64_t SequenceAlignment::FindBasePositionOnRead(const std::vector<CigarOp>&  s
   for (int64_t i=0; i<split_cigar.size(); i++) {
     char op = split_cigar[i].op;
     int64_t cig_pos_ref = split_cigar[i].pos_ref + aligned_pos;
-    if (is_cigar_match(op)) {
+    if (is_cigar_match(op) || is_cigar_del(op)) {
       if (pos_on_ref >= cig_pos_ref && pos_on_ref < (cig_pos_ref + split_cigar[i].count)) {
         if (cigar_id != NULL) *cigar_id = i;
-        return (split_cigar[i].pos_query + (pos_on_ref - cig_pos_ref));
-      }
-    } else if (is_cigar_del(op)) {
-      if (pos_on_ref >= cig_pos_ref && pos_on_ref < (cig_pos_ref + split_cigar[i].count)) {
-        if (cigar_id != NULL) *cigar_id = i;
-        return (split_cigar[i].pos_query);
+        if (is_cigar_match(op)) { return (split_cigar[i].pos_query + (pos_on_ref - cig_pos_ref)); }
+        else { return (split_cigar[i].pos_query); }
       }
     }
   }
