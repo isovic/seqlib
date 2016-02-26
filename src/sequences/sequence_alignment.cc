@@ -102,9 +102,9 @@ int64_t SequenceAlignment::FindBasePositionOnRead(const std::vector<CigarOp>&  s
       }
     }
   }
-  int64_t ref_len;
-  CalcReferenceLengthFromCigar(split_cigar, ref_len);
-  fprintf (stderr, "WARNING: i = %ld, split_cigar.size() = %ld, pos_on_ref = %ld, pos = %ld, length_on_ref = %ld, end_on_ref = %ld\n", i, split_cigar.size(), pos_on_ref, (pos - 1), ref_len, (pos - 1 + ref_len - 1));
+//  int64_t ref_len;
+//  CalcReferenceLengthFromCigar(split_cigar, ref_len);
+//  fprintf (stderr, "WARNING: i = %ld, split_cigar.size() = %ld, pos_on_ref = %ld, pos = %ld, length_on_ref = %ld, end_on_ref = %ld\n", i, split_cigar.size(), pos_on_ref, (pos - 1), ref_len, (pos - 1 + ref_len - 1));
   return -1;
 }
 
