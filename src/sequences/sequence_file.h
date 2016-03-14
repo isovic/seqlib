@@ -88,7 +88,7 @@ class SequenceFile {
   // Adds a new sequence to the container.
   // Inputs:
   //    sequence  - Pointer to a SingleSequence object holding a new sequence.
-  void AddSequence(SingleSequence *sequence);
+  void AddSequence(SingleSequence *sequence, bool needs_destruction);
 
   // Given the path to a FASTA or a FASTQ file, this function opens the file
   // handlers to enable loading of data from the file.
@@ -183,6 +183,7 @@ class SequenceFile {
 
  private:
   SequenceVector sequences_;  // Vector holding all the sequences in the file (or in a batch).
+  std::vector<bool> destroy_seq_; // Since sequences can be added via AddSequence function from the outside, automatic destruction of them could lead to a segfault or a double free problem. This array keeps track which sequences need to be destroyed by the destructor.
   std::string open_file_path_;  // Path to the sequences file that is currently opened (i.e. during batch loading).
   SequenceFormat seq_file_fmt_;
   kseq_t *bwa_seq_;  // Variable used by BWA's functions for file parsing.

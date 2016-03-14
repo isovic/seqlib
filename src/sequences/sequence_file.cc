@@ -64,17 +64,20 @@ void SequenceFile::Clear() {
 }
 
 void SequenceFile::ClearOnlyData() {
-  for (SequenceVector::iterator sequence_iterator = sequences_.begin();
-      sequence_iterator != sequences_.end(); sequence_iterator++) {
-    delete (*sequence_iterator);
+  for (int64_t i=0; i<sequences_.size(); i++) {
+    if (destroy_seq_[i] == true && sequences_[i]) {
+      delete sequences_[i];
+    }
   }
 
   sequences_.clear();
+  destroy_seq_.clear();
   current_data_size_ = 0;
 }
 
-void SequenceFile::AddSequence(SingleSequence *sequence) {
+void SequenceFile::AddSequence(SingleSequence *sequence, bool needs_destruction) {
   sequences_.push_back(sequence);
+  destroy_seq_.push_back(needs_destruction);
   current_data_size_ += sequence->CalculateTotalSize(kMemoryUnitByte);
 }
 
@@ -362,7 +365,7 @@ int SequenceFile::LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes
     if (randomize_non_acgt_bases == true)
       sequence->RandomizeNonACGTBases();
 
-    AddSequence(sequence);
+    AddSequence(sequence, true);
     id += 1;  // Increment the relative sequence id counter.
     id_absolute += 1;
 
@@ -438,7 +441,7 @@ int SequenceFile::LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_t
       if (randomize_non_acgt_bases == true)
         sequence->RandomizeNonACGTBases();
 
-      AddSequence(sequence);
+      AddSequence(sequence, true);
       id += 1;  // Increment the relative sequence id counter.
       id_absolute += 1;
 
@@ -501,7 +504,7 @@ int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_t
       if (randomize_non_acgt_bases == true)
         sequence->RandomizeNonACGTBases();
 
-      AddSequence(sequence);
+      AddSequence(sequence, true);
       id += 1;  // Increment the relative sequence id counter.
       id_absolute += 1;
 
