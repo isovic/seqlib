@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <string>
 #include "sequences/sequence_alignment.h"
+#include "utility/utility_conversion-inl.h"
 
 enum DataFormat {
   kDataFormatAscii = 0,
@@ -284,6 +285,9 @@ class SingleSequence {
   // Checks if the initialized data contains any non-[ACTG] bases and changes
   // them with randomly (uniformly) chosen bases.
   int RandomizeNonACGTBases();
+
+  // If data_ is in ASCII format, converts the lowercase a, c, t and g into uppercase, and marks everything that is not A, a, C, c, T, t or G, g as N.
+  int BasesToUppercase();
 
   // Reverses and complements the sequence data, and returns the new the new
   // sequence.

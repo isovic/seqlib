@@ -98,7 +98,7 @@ int edlibCalcEditDistance(
         int alphabetLength, int k, int mode,
         bool findStartLocations, bool findAlignment,
         int* bestScore, int** endLocations, int** startLocations, int* numLocations,
-        unsigned char** alignment, int* alignmentLength) {
+        unsigned char** alignment, int* alignmentLength, int *ret_k) {
 
     *alignment = NULL;
     /*--------------------- INITIALIZATION ------------------*/
@@ -136,6 +136,10 @@ int edlibCalcEditDistance(
         }
         k *= 2;
     } while(dynamicK && *bestScore == -1);
+
+    if (ret_k != 0) {
+      *ret_k = (k);
+    }
 
     if (*bestScore >= 0) {  // If there is solution.
         // If NW mode, set end location explicitly.

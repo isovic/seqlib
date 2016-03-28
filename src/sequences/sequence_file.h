@@ -110,8 +110,8 @@ class SequenceFile {
   //    file_path - Path to the FASTA/FASTQ/GFA/... file.
   // Return:
   //    Returns 0 if successful.
-  int LoadAll(SequenceFormat seq_file_fmt, std::string file_path, bool randomize_non_acgt_bases=false);
-  int LoadAllAsBatch(SequenceFormat seq_file_fmt, bool randomize_non_acgt_bases=false);
+  int LoadAll(SequenceFormat seq_file_fmt, std::string file_path, bool convert_to_uppercase=true, bool randomize_non_acgt_bases=false);
+  int LoadAllAsBatch(SequenceFormat seq_file_fmt, bool convert_to_uppercase=true, bool randomize_non_acgt_bases=false);
 
   // This function loads only a part of the sequences present in the
   // file into this object. Before using LoadNextBatchNSequences a file
@@ -129,7 +129,7 @@ class SequenceFile {
   // Return:
   //    Returns 0 if successful, -1 if no more sequences can be loaded
   //    (i.e. EOF), and otherwise if unsuccessful.
-  int LoadNextBatchNSequences(SequenceFormat seq_file_fmt, uint64_t num_seqs_to_load, bool randomize_non_acgt_bases=false);
+  int LoadNextBatchNSequences(SequenceFormat seq_file_fmt, uint64_t num_seqs_to_load, bool convert_to_uppercase=true, bool randomize_non_acgt_bases=false);
 
   // This function loads only a part of the sequences present in the
   // file into this object. Before using LoadNextBatchInMegabytes a file
@@ -149,7 +149,7 @@ class SequenceFile {
   // Return:
   //    Returns 0 if successful, -1 if no more sequences can be loaded
   //    (i.e. EOF), and otherwise if unsuccessful.
-  int LoadNextBatchInMegabytes(SequenceFormat seq_file_fmt, uint64_t megabytes_to_load, bool randomize_non_acgt_bases=false);
+  int LoadNextBatchInMegabytes(SequenceFormat seq_file_fmt, uint64_t megabytes_to_load, bool convert_to_uppercase=true, bool randomize_non_acgt_bases=false);
 
   // Calculates the size of the sequences that it currently occupies in memory.
   // Calculation of size includes the sum of lengths of the headers, the data
@@ -195,9 +195,9 @@ class SequenceFile {
                                 // is automatically calculated. Used for batch
                                 // loading of fixed size of sequences.
 
-  int LoadSeqs_(SequenceFormat seq_file_fmt, int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases);
+  int LoadSeqs_(SequenceFormat seq_file_fmt, int64_t num_seqs_to_load, int64_t megabytes_to_load, bool convert_to_uppercase=true, bool randomize_non_acgt_bases=false);
 
-  int LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases);
+  int LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool convert_to_uppercase=true, bool randomize_non_acgt_bases=false);
 
   // Given the path to a GFA file, this function loads all
   // sequences present in the file (lines beginning with 'S') into this object.
@@ -205,7 +205,7 @@ class SequenceFile {
   //    file_path - Path to the GFA file.
   // Return:
   //    Returns 0 if successful.
-  int LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases);
+  int LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool convert_to_uppercase=true, bool randomize_non_acgt_bases=false);
 
   // Given the path to a SAM file, this function loads all
   // sequences and their alignments present in the file into this object.
@@ -213,7 +213,7 @@ class SequenceFile {
   //    file_path - Path to the SAM file.
   // Return:
   //    Returns 0 if successful.
-  int LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases);
+  int LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool convert_to_uppercase=true, bool randomize_non_acgt_bases=false);
 
   // Reads a string line from a plain/.gz file. Lines are terminated by '\n' or '\0' characters.
   int ReadGZLine_(gzFile_s *gzip_fp, std::string &ret);

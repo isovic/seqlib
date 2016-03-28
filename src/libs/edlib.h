@@ -1,5 +1,5 @@
-#ifndef EDLIB_H
-#define EDLIB_H
+#ifndef EDLIB_H_
+#define EDLIB_H_
 
 
 #ifdef __cplusplus
@@ -90,7 +90,7 @@ extern "C" {
         int alphabetLength, int k, int mode,
         bool findStartLocations, bool findAlignment,
         int* bestScore, int** endLocations, int** startLocations, int* numLocations,
-        unsigned char** alignment, int* alignmentLength);
+        unsigned char** alignment, int* alignmentLength, int *ret_k=((int *) 0));
 
     /**
      * Builds cigar string from given alignment sequence.

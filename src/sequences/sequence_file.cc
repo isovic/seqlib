@@ -28,14 +28,14 @@ SequenceFile::SequenceFile(std::string file_path) {
   Clear();
 
   seq_file_fmt_ = SEQ_FORMAT_AUTO;
-  LoadAll(seq_file_fmt_, file_path);
+  LoadAll(seq_file_fmt_, file_path, true);
 }
 
 SequenceFile::SequenceFile(SequenceFormat seq_file_fmt, std::string file_path) {
   bwa_seq_ = NULL;
   Clear();
   seq_file_fmt_ = seq_file_fmt;
-  LoadAll(seq_file_fmt, file_path);
+  LoadAll(seq_file_fmt, file_path, true);
 }
 
 SequenceFile::SequenceFile(SequenceFormat seq_file_fmt, std::string file_path, uint64_t num_seqs_to_load) {
@@ -43,7 +43,7 @@ SequenceFile::SequenceFile(SequenceFormat seq_file_fmt, std::string file_path, u
   Clear();
   seq_file_fmt_ = seq_file_fmt;
   OpenFileForBatchLoading(file_path);
-  LoadNextBatchNSequences(seq_file_fmt, num_seqs_to_load);
+  LoadNextBatchNSequences(seq_file_fmt, num_seqs_to_load, true);
 }
 
 SequenceFile::~SequenceFile() {
@@ -97,14 +97,14 @@ void SequenceFile::set_sequences(const SequenceVector& sequences) {
   sequences_ = sequences;
 }
 
-int SequenceFile::LoadAll(SequenceFormat seq_file_fmt, std::string file_path, bool randomize_non_acgt_bases) {
+int SequenceFile::LoadAll(SequenceFormat seq_file_fmt, std::string file_path, bool convert_to_uppercase, bool randomize_non_acgt_bases) {
   Clear();
 
   if (OpenFileForBatchLoading(file_path))
     return 1;
 
   int ret_val = 0;
-  if ((ret_val = LoadAllAsBatch(seq_file_fmt, randomize_non_acgt_bases)) != 0) {
+  if ((ret_val = LoadAllAsBatch(seq_file_fmt, convert_to_uppercase, randomize_non_acgt_bases)) != 0) {
     CloseFileAfterBatchLoading();
     return ret_val;
   }
@@ -143,7 +143,7 @@ int SequenceFile::CloseFileAfterBatchLoading() {
   return 0;
 }
 
-int SequenceFile::LoadAllAsBatch(SequenceFormat seq_file_fmt, bool randomize_non_acgt_bases) {
+int SequenceFile::LoadAllAsBatch(SequenceFormat seq_file_fmt, bool convert_to_uppercase, bool randomize_non_acgt_bases) {
   ClearOnlyData();
 
   current_batch_id_ = 0;
@@ -158,7 +158,7 @@ int SequenceFile::LoadAllAsBatch(SequenceFormat seq_file_fmt, bool randomize_non
     return 1;
   }
 
-  int64_t num_loaded_seqs = LoadSeqs_(seq_file_fmt, 0, 0, randomize_non_acgt_bases);
+  int64_t num_loaded_seqs = LoadSeqs_(seq_file_fmt, 0, 0, convert_to_uppercase, randomize_non_acgt_bases);
 
   // If there are quality values, but for some reason the length of
   // the quality string is different from the length of the sequences
@@ -179,7 +179,7 @@ int SequenceFile::LoadAllAsBatch(SequenceFormat seq_file_fmt, bool randomize_non
   return 0;
 }
 
-int SequenceFile::LoadNextBatchNSequences(SequenceFormat seq_file_fmt, uint64_t num_seqs_to_load, bool randomize_non_acgt_bases) {
+int SequenceFile::LoadNextBatchNSequences(SequenceFormat seq_file_fmt, uint64_t num_seqs_to_load, bool convert_to_uppercase, bool randomize_non_acgt_bases) {
   current_batch_starting_sequence_id_ += sequences_.size();
 
   ClearOnlyData();
@@ -194,7 +194,7 @@ int SequenceFile::LoadNextBatchNSequences(SequenceFormat seq_file_fmt, uint64_t 
   }
 
   int64_t num_loaded_seqs = 0;
-  num_loaded_seqs = LoadSeqs_(seq_file_fmt, num_seqs_to_load, 0, randomize_non_acgt_bases);
+  num_loaded_seqs = LoadSeqs_(seq_file_fmt, num_seqs_to_load, 0, convert_to_uppercase, randomize_non_acgt_bases);
 
   if ((bwa_seq_->qual.l > 0 && bwa_seq_->seq.l != bwa_seq_->qual.l) || num_loaded_seqs < 0) {
     ERROR_REPORT(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file! Batch ID: %ld. Absolute sequence ID: %ld. Relative sequence ID: %ld. Skipping rest of the file.", current_batch_id_, (current_batch_starting_sequence_id_ + sequences_.size()), sequences_.size());
@@ -209,7 +209,7 @@ int SequenceFile::LoadNextBatchNSequences(SequenceFormat seq_file_fmt, uint64_t 
   return 0;
 }
 
-int SequenceFile::LoadNextBatchInMegabytes(SequenceFormat seq_file_fmt, uint64_t megabytes_to_load, bool randomize_non_acgt_bases) {
+int SequenceFile::LoadNextBatchInMegabytes(SequenceFormat seq_file_fmt, uint64_t megabytes_to_load, bool convert_to_uppercase, bool randomize_non_acgt_bases) {
   current_batch_starting_sequence_id_ += sequences_.size();
 
   ClearOnlyData();
@@ -224,7 +224,7 @@ int SequenceFile::LoadNextBatchInMegabytes(SequenceFormat seq_file_fmt, uint64_t
   }
 
   int64_t num_loaded_seqs = 0;
-  num_loaded_seqs = LoadSeqs_(seq_file_fmt, 0, megabytes_to_load, randomize_non_acgt_bases);
+  num_loaded_seqs = LoadSeqs_(seq_file_fmt, 0, megabytes_to_load, convert_to_uppercase, randomize_non_acgt_bases);
 
   if ((bwa_seq_->qual.l > 0 && bwa_seq_->seq.l != bwa_seq_->qual.l) || num_loaded_seqs < 0) {
     LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file! Batch ID: %ld. Absolute sequence ID: %ld. Relative sequence ID: %ld. Skipping rest of the file.", current_batch_id_, (current_batch_starting_sequence_id_ + num_loaded_seqs), num_loaded_seqs));
@@ -305,19 +305,19 @@ std::string SequenceFile::GetFileExt_(std::string path) {
   return ext;
 }
 
-int SequenceFile::LoadSeqs_(SequenceFormat seq_file_fmt, int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases) {
+int SequenceFile::LoadSeqs_(SequenceFormat seq_file_fmt, int64_t num_seqs_to_load, int64_t megabytes_to_load, bool convert_to_uppercase, bool randomize_non_acgt_bases) {
   if (seq_file_fmt == SEQ_FORMAT_AUTO) {
     seq_file_fmt = SeqFmtToString(GetFileExt_(open_file_path_));
   }
 
   if (seq_file_fmt == SEQ_FORMAT_FASTQ) {
-    return LoadSeqsFromFastq_(num_seqs_to_load, megabytes_to_load, randomize_non_acgt_bases);
+    return LoadSeqsFromFastq_(num_seqs_to_load, megabytes_to_load, convert_to_uppercase, randomize_non_acgt_bases);
 
   } else if (seq_file_fmt == SEQ_FORMAT_GFA) {
-    return LoadSeqsFromGFA_(num_seqs_to_load, megabytes_to_load, randomize_non_acgt_bases);
+    return LoadSeqsFromGFA_(num_seqs_to_load, megabytes_to_load, convert_to_uppercase, randomize_non_acgt_bases);
 
   } else if (seq_file_fmt == SEQ_FORMAT_SAM) {
-    return LoadSeqsFromSAM_(num_seqs_to_load, megabytes_to_load, randomize_non_acgt_bases);
+    return LoadSeqsFromSAM_(num_seqs_to_load, megabytes_to_load, convert_to_uppercase, randomize_non_acgt_bases);
 
   } else {
     FATAL_REPORT(ERR_UNEXPECTED_VALUE, "Input sequence file format unknown!\n");
@@ -327,7 +327,7 @@ int SequenceFile::LoadSeqs_(SequenceFormat seq_file_fmt, int64_t num_seqs_to_loa
   return 0;
 }
 
-int SequenceFile::LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases) {
+int SequenceFile::LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool convert_to_uppercase, bool randomize_non_acgt_bases) {
   int32_t l;
   uint64_t id = 0;
   uint64_t id_absolute = current_batch_starting_sequence_id_;
@@ -362,8 +362,12 @@ int SequenceFile::LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes
                                       (int8_t *) bwa_seq_->qual.s, bwa_seq_->seq.l, id, id_absolute);
     }
 
-    if (randomize_non_acgt_bases == true)
+    if (randomize_non_acgt_bases == true) {
       sequence->RandomizeNonACGTBases();
+    }
+    if (convert_to_uppercase == true) {
+      sequence->BasesToUppercase();
+    }
 
     AddSequence(sequence, true);
     id += 1;  // Increment the relative sequence id counter.
@@ -415,7 +419,7 @@ int SequenceFile::ReadGZLine_(gzFile_s *gzip_fp, std::string &ret) {
   return 1;
 }
 
-int SequenceFile::LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases) {
+int SequenceFile::LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool convert_to_uppercase, bool randomize_non_acgt_bases) {
   uint64_t id = 0;
   uint64_t id_absolute = current_batch_starting_sequence_id_;
   SingleSequence *sequence = NULL;
@@ -438,8 +442,12 @@ int SequenceFile::LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_t
                                                 header.length(),
                                                 (int8_t *) seq.c_str(), seq.length(), id, id_absolute);
 
-      if (randomize_non_acgt_bases == true)
+      if (randomize_non_acgt_bases == true) {
         sequence->RandomizeNonACGTBases();
+      }
+      if (convert_to_uppercase == true) {
+        sequence->BasesToUppercase();
+      }
 
       AddSequence(sequence, true);
       id += 1;  // Increment the relative sequence id counter.
@@ -455,7 +463,7 @@ int SequenceFile::LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_t
   return id;
 }
 
-int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool randomize_non_acgt_bases) {
+int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool convert_to_uppercase, bool randomize_non_acgt_bases) {
   uint64_t id = 0;
   uint64_t id_absolute = current_batch_starting_sequence_id_;
   SingleSequence *sequence = NULL;
@@ -501,8 +509,12 @@ int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_t
       }
 
       sequence->InitAlignment(aln);
-      if (randomize_non_acgt_bases == true)
+      if (randomize_non_acgt_bases == true) {
         sequence->RandomizeNonACGTBases();
+      }
+      if (convert_to_uppercase == true) {
+        sequence->BasesToUppercase();
+      }
 
       AddSequence(sequence, true);
       id += 1;  // Increment the relative sequence id counter.

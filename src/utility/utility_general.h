@@ -121,15 +121,14 @@ void ordered_sort_vector(std::vector<T> const& values, std::vector<size_t> &indi
 }
 
 template <typename T>
-std::vector<size_t> ordered_sort_array(const T* values, int64_t values_size) {
-    std::vector<size_t> indices(values_size);
+void ordered_sort_array(const T* values, int64_t values_size, std::vector<size_t> &indices) {
+    indices.resize(values_size);
     std::iota(begin(indices), end(indices), static_cast<size_t>(0));
 
     std::sort(
         begin(indices), end(indices),
         [&](size_t a, size_t b) { return values[a] < values[b]; }
     );
-    return indices;
 }
 
 /// User needs to free the memory using 'free'.
