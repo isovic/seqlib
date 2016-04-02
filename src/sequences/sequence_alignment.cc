@@ -90,6 +90,10 @@ bool SequenceAlignment::IsMapped() const {
 
 int64_t SequenceAlignment::FindBasePositionOnRead(const std::vector<CigarOp>&  split_cigar, int64_t pos_on_ref, int64_t *cigar_id) const {
   int64_t aligned_pos = (this->pos > 0) ? (this->pos - 1) : 0;      // pos field of the SAM file is 1-based. If the value is <= 0, then something is not set right, and ignore this value.
+  if (split_cigar.size() > 0 && (pos_on_ref < (split_cigar[0].pos_ref + aligned_pos))) {
+    return -1;
+  }
+
   int64_t i=0;
   for (i=0; i<split_cigar.size(); i++) {
     char op = split_cigar[i].op;
@@ -105,14 +109,18 @@ int64_t SequenceAlignment::FindBasePositionOnRead(const std::vector<CigarOp>&  s
 //  int64_t ref_len;
 //  CalcReferenceLengthFromCigar(split_cigar, ref_len);
 //  fprintf (stderr, "WARNING: i = %ld, split_cigar.size() = %ld, pos_on_ref = %ld, pos = %ld, length_on_ref = %ld, end_on_ref = %ld\n", i, split_cigar.size(), pos_on_ref, (pos - 1), ref_len, (pos - 1 + ref_len - 1));
-  return -1;
+  return -2;
 }
 
 int64_t SequenceAlignment::FindBasePositionOnRef(const std::vector<CigarOp>& split_cigar, int64_t pos_on_read, int64_t *cigar_id) const {
   int64_t aligned_pos = (this->pos > 0) ? (this->pos - 1) : 0;      // pos field of the SAM file is 1-based. If the value is <= 0, then something is not set right, and ignore this value.
+  if (pos_on_read < 0) {
+    return -1;
+  }
+
   for (int64_t i=0; i<split_cigar.size(); i++) {
     char op = split_cigar[i].op;
-    int64_t cig_pos_ref = split_cigar[i].pos_ref + aligned_pos;
+//    int64_t cig_pos_ref = split_cigar[i].pos_ref + aligned_pos;
     if (is_cigar_match(op)) {
       if (pos_on_read >= split_cigar[i].pos_query && pos_on_read < (split_cigar[i].pos_query + split_cigar[i].count)) {
         if (cigar_id != NULL) *cigar_id = i;
@@ -125,7 +133,7 @@ int64_t SequenceAlignment::FindBasePositionOnRef(const std::vector<CigarOp>& spl
       }
     }
   }
-  return -1;
+  return -2;
 }
 
 std::string SequenceAlignment::GetCigarString() const {
