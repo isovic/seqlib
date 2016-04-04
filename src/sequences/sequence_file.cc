@@ -31,19 +31,23 @@ SequenceFile::SequenceFile(std::string file_path) {
   LoadAll(seq_file_fmt_, file_path, true);
 }
 
-SequenceFile::SequenceFile(SequenceFormat seq_file_fmt, std::string file_path) {
-  bwa_seq_ = NULL;
-  Clear();
-  seq_file_fmt_ = seq_file_fmt;
-  LoadAll(seq_file_fmt, file_path, true);
-}
+//SequenceFile::SequenceFile(SequenceFormat seq_file_fmt, std::string file_path) {
+//  bwa_seq_ = NULL;
+//  Clear();
+//  seq_file_fmt_ = seq_file_fmt;
+//  LoadAll(seq_file_fmt, file_path, true);
+//}
 
-SequenceFile::SequenceFile(SequenceFormat seq_file_fmt, std::string file_path, uint64_t num_seqs_to_load) {
+SequenceFile::SequenceFile(SequenceFormat seq_file_fmt, std::string file_path, bool convert_to_uppercase, uint64_t num_seqs_to_load) {
   bwa_seq_ = NULL;
   Clear();
   seq_file_fmt_ = seq_file_fmt;
-  OpenFileForBatchLoading(file_path);
-  LoadNextBatchNSequences(seq_file_fmt, num_seqs_to_load, true);
+  if (num_seqs_to_load <= 0) {
+      LoadAll(seq_file_fmt, file_path, convert_to_uppercase);
+  } else {
+    OpenFileForBatchLoading(file_path);
+    LoadNextBatchNSequences(seq_file_fmt, num_seqs_to_load, convert_to_uppercase);
+  }
 }
 
 SequenceFile::~SequenceFile() {
