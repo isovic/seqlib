@@ -1063,8 +1063,12 @@ static int obtainAlignment(const unsigned char* query, const unsigned char* rQue
                                 target, targetLength,
                                 alphabetLength, bestScore,
                                 &score_, &endLocation_, true, &alignData, -1);
-        assert(score_ == bestScore);
-        assert(endLocation_ == targetLength - 1);
+
+        if (score_ != bestScore || endLocation_ != (targetLength - 1)) {
+          return EDLIB_STATUS_ERROR;
+        }
+//        assert(score_ == bestScore);
+//        assert(endLocation_ == targetLength - 1);
 
         statusCode = obtainAlignmentTraceback(queryLength, targetLength,
                                               bestScore, alignData,
@@ -1167,7 +1171,10 @@ static int obtainAlignmentHirschberg(
     // If there is padding at the beginning of scoresRight (that can happen because of reversing that we do),
     // move pointer forward to remove the padding (that is why we remember originalStart).
     if (scoresRightStartIdx < 0) {
-        assert(scoresRightStartIdx == -1 * W);
+//        assert(scoresRightStartIdx == -1 * W);
+        if (scoresRightStartIdx != -1 * W) {
+          return EDLIB_STATUS_ERROR;
+        }
         scoresRight += W;
         scoresRightStartIdx += W;
         scoresRightLength -= W;
