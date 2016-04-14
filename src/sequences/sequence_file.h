@@ -68,12 +68,12 @@ class SequenceFile {
   // Initializes the object, and calls LoadAll, with the extension of the file_path as the in format.
   SequenceFile(std::string file_path);
 
-  // Initializes the object, and calls LoadAll.
-  SequenceFile(SequenceFormat seq_file_fmt, std::string file_path);
+//  // Initializes the object, and calls LoadAll.
+//  SequenceFile(SequenceFormat seq_file_fmt, std::string file_path);
 
   // Initializes the object, and calls OpenFileForBatchLoading and
-  // LoadNextBatchNSequences respectively.
-  SequenceFile(SequenceFormat seq_file_fmt, std::string file_path, uint64_t num_seqs_to_load);
+  // LoadNextBatchNSequences respectively if num_seqs_to_load > 0, or LoadAll otherwise.
+  SequenceFile(SequenceFormat seq_file_fmt, std::string file_path,bool convert_to_uppercase=true, uint64_t num_seqs_to_load=0);
 
   ~SequenceFile();
 
