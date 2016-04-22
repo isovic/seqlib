@@ -57,7 +57,7 @@ class SequenceAlignment {
 //  std::string qname;    // Field #1.
   uint32_t flag;        // Field #2.
   std::string rname;    // Field #3.
-  int64_t pos;          // Field #4.
+  int64_t pos;          // Field #4. At the moment, 1-based, as in SAM file.
   int32_t mapq;         // Field #5.
 //  std::string cigar;    // Field #6.
   std::vector<CigarOp> cigar;
