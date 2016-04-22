@@ -216,7 +216,7 @@ class SequenceFile {
   int LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_to_load, bool convert_to_uppercase=true, bool randomize_non_acgt_bases=false);
 
   // Reads a string line from a plain/.gz file. Lines are terminated by '\n' or '\0' characters.
-  int ReadGZLine_(gzFile_s *gzip_fp, std::string &ret);
+  int ReadGZLine_(gzFile gzip_fp, std::string &ret);
 
   std::string GetFileExt_(std::string path);
 };

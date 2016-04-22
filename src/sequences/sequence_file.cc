@@ -389,7 +389,7 @@ int SequenceFile::LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes
   return id;
 }
 
-int SequenceFile::ReadGZLine_(gzFile_s *gzip_fp, std::string &ret) {
+int SequenceFile::ReadGZLine_(gzFile gzip_fp, std::string &ret) {
   const int32_t BUFF_SIZE = 4096;
   int8_t buff[BUFF_SIZE + 1];
   std::stringstream ss;
