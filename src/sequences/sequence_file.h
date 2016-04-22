@@ -45,6 +45,15 @@ KSEQ_INIT(gzFile, gzread)
 // Type defined to hold sequences in the SequenceFile container.
 typedef std::vector<SingleSequence *> SequenceVector;
 
+struct seq_sort_key {
+  inline bool operator() (const SingleSequence* op1, const SingleSequence* op2) {
+    if ((op1)->get_aln().pos != (op2)->get_aln().pos) {
+      return ((op1)->get_aln().pos < (op2)->get_aln().pos);
+    }
+    return (std::string(op1->get_header()) < std::string(op2->get_header()));
+  }
+};
+
 // This is used for parsing and storing sequences. Supports
 // parsing from FASTA and FASTQ files. Files can be parsed
 // entirely, or in batches, where the size of a batch can
@@ -172,6 +181,9 @@ class SequenceFile {
   // Inputs:
   //    fp  - file pointer to an open file. Can also be stdout and stderr.  void Verbose(FILE *fp);
   void Verbose(FILE *fp);
+
+  // Sorts sequences ascending in this order: 1. position
+  void Sort();
 
   const SequenceVector& get_sequences() const;
   void set_sequences(const SequenceVector& sequences);

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "sequences/sequence_file.h"
 #include "log_system/log_system.h"
+#include "utility/utility_general.h"
 
 int main() {
 	printf ("[] Compilation of seqlib was successful!\n");
@@ -14,7 +15,7 @@ int main() {
 
 	printf ("[] Testing the SequenceFile class. This test should load and parse a sample FASTQ file.\n");
 	fflush(stdout);
-	SequenceFile fastqfile("../sample-data/test.fastq");
+	SequenceFile fastqfile("sample-data/test.fastq");
 	fastqfile.Verbose(stdout);
 	printf ("\n");
 
@@ -31,9 +32,24 @@ int main() {
 	LogSystem::GetInstance().Log(VERBOSE_LEVEL_MED | VERBOSE_LEVEL_DEBUG, true, FormatString("This message will only get displayed on a medium debug verbose level.\n"), "LogExample");
 	LogSystem::GetInstance().Error(SEVERITY_INT_INFO, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "This is an example of an info message."));
 	LogSystem::GetInstance().Error(SEVERITY_INT_WARNING, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "This is an example of a warning message."));
-	LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "This is an example of a warning message."));
 	/// This is commented out, because it would exit the program.
-	/// LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "This is an example of a memory exception."));
+	// LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "This is an example of a warning message."));
+	// LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_MEMORY, "This is an example of a memory exception."));
+
+	SequenceFile samfile("sample-data/test.sam");
+	samfile.Verbose(stdout);
+	for (int64_t i=0; i<samfile.get_sequences().size(); i++) {
+		printf ("[%ld] Pos: %d, Qname: '%s'\n", i, samfile.get_sequences()[i]->get_aln().pos, samfile.get_sequences()[i]->get_header());
+	}
+	printf ("\n");
+
+	printf ("Sorting the sequences.\n");
+	samfile.Sort();
+	for (int64_t i=0; i<samfile.get_sequences().size(); i++) {
+		printf ("[%ld] Pos: %d, Qname: '%s'\n", i, samfile.get_sequences()[i]->get_aln().pos, samfile.get_sequences()[i]->get_header());
+	}
+	printf ("\n");
+	// samfile.Sort();
 
 	return 0;
 }

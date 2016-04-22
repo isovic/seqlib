@@ -533,3 +533,7 @@ int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_t
 
   return id;
 }
+
+void SequenceFile::Sort() {
+  std::sort(sequences_.begin(), sequences_.end(), seq_sort_key());
+}
