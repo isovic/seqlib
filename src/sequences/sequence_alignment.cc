@@ -169,3 +169,37 @@ int64_t SequenceAlignment::GetQueryLengthFromCigar() const {
   CalcQueryLengthFromCigar(cigar, len);
   return len;
 }
+
+int64_t SequenceAlignment::GetClippedBasesFront() const {
+  int64_t len = 0;
+  CalcClippedBasesFront(cigar, len);
+  return len;
+}
+
+int64_t SequenceAlignment::GetClippedBasesBack() const {
+  int64_t len = 0;
+  CalcClippedBasesBack(cigar, len);
+  return len;
+}
+
+int SequenceAlignment::CalcClippedBasesFront(const std::vector<CigarOp>& split_cigar, int64_t& ret_clip_len) {
+  int64_t clip_len = 0;
+  for (int64_t i=0; i<split_cigar.size(); i++) {
+    if (is_cigar_soft(split_cigar[i].op)) { clip_len += split_cigar[i].count; }
+    else if (is_cigar_hard(split_cigar[i].op)) { }
+    else { break; }
+  }
+  ret_clip_len = clip_len;
+  return 0;
+}
+
+int SequenceAlignment::CalcClippedBasesBack(const std::vector<CigarOp>& split_cigar, int64_t& ret_clip_len) {
+  int64_t clip_len = 0;
+  for (int64_t i=(split_cigar.size()-1); i>=0; i--) {
+    if (is_cigar_soft(split_cigar[i].op)) { clip_len += split_cigar[i].count; }
+    else if (is_cigar_hard(split_cigar[i].op)) { }
+    else { break; }
+  }
+  ret_clip_len = clip_len;
+  return 0;
+}
