@@ -39,6 +39,8 @@ class SequenceAlignment {
   void ProcessOptional();
   int64_t GetReferenceLengthFromCigar() const;
   int64_t GetQueryLengthFromCigar() const;
+  int64_t GetClippedBasesFront() const;
+  int64_t GetClippedBasesBack() const;
   // Returns the position if found. If the requested position begins before the position of the first base, the function returns -1. If the requested position is behind the last base, the function returns -2.
   // Parameter cigar_id is the ID (ordinal number) of the cigar operation where the position was found in. Optional.
   int64_t FindBasePositionOnRead(int64_t pos, int64_t *cigar_id=NULL) const;
@@ -52,6 +54,8 @@ class SequenceAlignment {
 
   static int CalcReferenceLengthFromCigar(const std::vector<CigarOp>& split_cigar, int64_t &ret_ref_len);
   static int CalcQueryLengthFromCigar(const std::vector<CigarOp>& split_cigar, int64_t &ret_query_len);
+  static int CalcClippedBasesFront(const std::vector<CigarOp>& split_cigar, int64_t &ret_clip_len);
+  static int CalcClippedBasesBack(const std::vector<CigarOp>& split_cigar, int64_t &ret_clip_len);
   static std::string MakeCigarString(const std::vector<CigarOp>& split_cigar);
   static int SplitCigar(const std::string &cigar_str, std::vector<CigarOp>& ret);
 

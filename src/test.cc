@@ -51,6 +51,12 @@ int main() {
 	printf ("\n");
 	// samfile.Sort();
 
+	printf ("Testing the correctnes of leading/trailing clipped bases:\n");
+	for (int64_t i=0; i<samfile.get_sequences().size(); i++) {
+		std::string cigar = samfile.get_sequences()[i]->get_aln().GetCigarString();
+		printf ("[%ld] front: %ld, back: %ld, CIGAR start: %s, CIGAR end: %s\n", i, samfile.get_sequences()[i]->get_aln().GetClippedBasesFront(), samfile.get_sequences()[i]->get_aln().GetClippedBasesBack(), GetSubstring((char *) cigar.c_str(), 10).c_str(), GetSubstring((char *) (cigar.c_str() + cigar.size() - 10), 10).c_str() );
+	}
+
 	return 0;
 }
 
