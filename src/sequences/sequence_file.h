@@ -47,8 +47,8 @@ typedef std::vector<SingleSequence *> SequenceVector;
 
 struct seq_sort_key {
   inline bool operator() (const SingleSequence* op1, const SingleSequence* op2) {
-    if ((op1)->get_aln().pos != (op2)->get_aln().pos) {
-      return ((op1)->get_aln().pos < (op2)->get_aln().pos);
+    if ((op1)->get_aln().get_pos() != (op2)->get_aln().get_pos()) {
+      return ((op1)->get_aln().get_pos() < (op2)->get_aln().get_pos());
     }
     return (std::string(op1->get_header()) < std::string(op2->get_header()));
   }

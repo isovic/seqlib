@@ -460,9 +460,9 @@ int SingleSequence::InitAlignment(const SequenceAlignment& aln) {
 
 std::string SingleSequence::MakeSAMLine() const {
   std::stringstream ss;
-  if (aln_.flag & 4) {
+  if (aln_.get_flag() & 4) {
     ss << TrimStringToFirstSpace_(std::string(header_)) << "\t" <<
-          aln_.flag << "\t" <<
+          aln_.get_flag() << "\t" <<
           "*" << "\t" <<
           "0" << "\t" <<
           "0" << "\t" <<
@@ -476,19 +476,19 @@ std::string SingleSequence::MakeSAMLine() const {
 
   } else {
     ss << TrimStringToFirstSpace_(std::string(header_)) << "\t" <<
-          aln_.flag << "\t" <<
-          aln_.rname << "\t" <<
-          aln_.pos << "\t" <<
-          aln_.mapq << "\t" <<
+          aln_.get_flag() << "\t" <<
+          aln_.get_rname() << "\t" <<
+          aln_.get_pos() << "\t" <<
+          aln_.get_mapq() << "\t" <<
           aln_.GetCigarString() << "\t" <<
-          aln_.rnext << "\t" <<
-          aln_.pnext << "\t" <<
-          aln_.tlen << "\t" <<
+          aln_.get_rnext() << "\t" <<
+          aln_.get_pnext() << "\t" <<
+          aln_.get_tlen() << "\t" <<
           GetSequenceAsString(0, 0) << "\t";
     if (quality_ != NULL) ss << (char *) quality_;
     else ss << "*";
-    for (int32_t i=0; i<aln_.optional.size(); i++) {
-      ss << "\t" << aln_.optional[i];
+    for (int32_t i=0; i<aln_.get_optional().size(); i++) {
+      ss << "\t" << aln_.get_optional()[i];
     }
   }
   return ss.str();

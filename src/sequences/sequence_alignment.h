@@ -31,6 +31,7 @@ typedef struct {
 class SequenceAlignment {
  public:
   SequenceAlignment();
+  SequenceAlignment(uint32_t flag, std::string &rname, int64_t pos, int32_t mapq, std::string &cigar_string, std::string &rnext, int64_t pnext, int64_t tlen, std::vector<std::string> &optional);
   ~SequenceAlignment();
 
   void CopyFrom(const SequenceAlignment &aln);
@@ -40,37 +41,62 @@ class SequenceAlignment {
   int64_t GetQueryLengthFromCigar() const;
   // Returns the position if found. If the requested position begins before the position of the first base, the function returns -1. If the requested position is behind the last base, the function returns -2.
   // Parameter cigar_id is the ID (ordinal number) of the cigar operation where the position was found in. Optional.
-  int64_t FindBasePositionOnRead(const std::vector<CigarOp>& split_cigar, int64_t pos, int64_t *cigar_id=NULL) const;
+  int64_t FindBasePositionOnRead(int64_t pos, int64_t *cigar_id=NULL) const;
   // Returns the position if found. If the requested position begins before the position of the first base, the function returns -1. If the requested position is behind the last base, the function returns -2.
   // Parameter cigar_id is the ID (ordinal number) of the cigar operation where the position was found in. Optional.
-  int64_t FindBasePositionOnRef(const std::vector<CigarOp>& split_cigar, int64_t pos, int64_t *cigar_id=NULL) const;
+  int64_t FindBasePositionOnRef(int64_t pos, int64_t *cigar_id=NULL) const;
   std::string GetCigarString() const;
+  void SetCigarFromString(std::string &cigar_str);
 
   bool IsMapped() const;
-
-  static int SplitCigar(const std::string &cigar_str, std::vector<CigarOp>& ret);
 
   static int CalcReferenceLengthFromCigar(const std::vector<CigarOp>& split_cigar, int64_t &ret_ref_len);
   static int CalcQueryLengthFromCigar(const std::vector<CigarOp>& split_cigar, int64_t &ret_query_len);
   static std::string MakeCigarString(const std::vector<CigarOp>& split_cigar);
+  static int SplitCigar(const std::string &cigar_str, std::vector<CigarOp>& ret);
+
+  int64_t get_as() const;
+  void set_as(int64_t as);
+  const std::vector<CigarOp>& get_cigar() const;
+  void set_cigar(const std::vector<CigarOp>& cigar);
+  double get_evalue() const;
+  void set_evalue(double evalue);
+  uint32_t get_flag() const;
+  void set_flag(uint32_t flag);
+  int32_t get_mapq() const;
+  void set_mapq(int32_t mapq);
+  const std::vector<std::string>& get_optional() const;
+  void set_optional(const std::vector<std::string>& optional);
+  int64_t get_pnext() const;
+  void set_pnext(int64_t pnext);
+  int64_t get_pos() const;
+  void set_pos(int64_t pos);
+  const std::string& get_rname() const;
+  void set_rname(const std::string& rname);
+  const std::string& get_rnext() const;
+  void set_rnext(const std::string& rnext);
+  int64_t get_tlen() const;
+  void set_tlen(int64_t tlen);
+
+ private:
 
 //  std::string qname;    // Field #1.
-  uint32_t flag;        // Field #2.
-  std::string rname;    // Field #3.
-  int64_t pos;          // Field #4. At the moment, 1-based, as in SAM file.
-  int32_t mapq;         // Field #5.
+  uint32_t flag_;        // Field #2.
+  std::string rname_;    // Field #3.
+  int64_t pos_;          // Field #4. At the moment, 1-based, as in SAM file.
+  int32_t mapq_;         // Field #5.
 //  std::string cigar;    // Field #6.
-  std::vector<CigarOp> cigar;
-  std::string rnext;    // Field #7.
-  int64_t pnext;        // Field #8.
-  int64_t tlen;         // Field #9.
+  std::vector<CigarOp> cigar_;
+  std::string rnext_;    // Field #7.
+  int64_t pnext_;        // Field #8.
+  int64_t tlen_;         // Field #9.
   // std::string seq;   // Field #10. Skipped because SingleSequence holds this info.
   // std::string qual;  // Field #11. Skipped because SingleSequence holds this info.
 
   // Optional fields in the SAM format:
-  int64_t as;           // Alignment score.
-  double evalue;        // E-value. There is no dedicated field in the SAM format, but GraphMap uses ZE to specify the E-value.
-  std::vector<std::string> optional;  // Raw values (strings) of optional fields, not explicitly converted to expected values;
+  int64_t as_;           // Alignment score.
+  double evalue_;        // E-value. There is no dedicated field in the SAM format, but GraphMap uses ZE to specify the E-value.
+  std::vector<std::string> optional_;  // Raw values (strings) of optional fields, not explicitly converted to expected values;
 };
 
 #endif /* CODEBASE_SEQLIB_SRC_SEQUENCES_SEQUENCE_ALIGNMENT_H_ */

@@ -39,14 +39,14 @@ int main() {
 	SequenceFile samfile("sample-data/test.sam");
 	samfile.Verbose(stdout);
 	for (int64_t i=0; i<samfile.get_sequences().size(); i++) {
-		printf ("[%ld] Pos: %d, Qname: '%s'\n", i, samfile.get_sequences()[i]->get_aln().pos, samfile.get_sequences()[i]->get_header());
+		printf ("[%ld] Pos: %d, Qname: '%s'\n", i, samfile.get_sequences()[i]->get_aln().get_pos(), samfile.get_sequences()[i]->get_header());
 	}
 	printf ("\n");
 
 	printf ("Sorting the sequences.\n");
 	samfile.Sort();
 	for (int64_t i=0; i<samfile.get_sequences().size(); i++) {
-		printf ("[%ld] Pos: %d, Qname: '%s'\n", i, samfile.get_sequences()[i]->get_aln().pos, samfile.get_sequences()[i]->get_header());
+		printf ("[%ld] Pos: %d, Qname: '%s'\n", i, samfile.get_sequences()[i]->get_aln().get_pos(), samfile.get_sequences()[i]->get_header());
 	}
 	printf ("\n");
 	// samfile.Sort();

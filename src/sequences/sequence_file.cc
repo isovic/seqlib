@@ -485,21 +485,34 @@ int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_t
 
     } else {
       sequence = new SingleSequence();
-      SequenceAlignment aln;
       std::istringstream ss(line);
       std::string header;
       std::string seq;
       std::string qual;
       std::string cigar_string;
 
-      ss >> header >> aln.flag >> aln.rname >> aln.pos >> aln.mapq >> cigar_string >> aln.rnext >> aln.pnext >> aln.tlen >> seq >> qual;
-      SequenceAlignment::SplitCigar(cigar_string, aln.cigar);
+      uint32_t flag;
+      std::string rname;
+      int64_t pos;
+      int32_t mapq;
+      std::string rnext;
+      int64_t pnext;
+      int64_t tlen;
+
+//      ss >> header >> aln.flag >> aln.rname >> aln.pos >> aln.mapq >> cigar_string >> aln.rnext >> aln.pnext >> aln.tlen >> seq >> qual;
+      ss >> header >> flag >> rname >> pos >> mapq >> cigar_string >> rnext >> pnext >> tlen >> seq >> qual;
+
+//      SequenceAlignment::SplitCigar(cigar_string, aln.cigar);
 
       // Load optional parameters from a SAM line.
+      std::vector<std::string> optional;
       std::string opt_par;
       while (ss >> opt_par) {
-        aln.optional.push_back(opt_par);
+        optional.push_back(opt_par);
       }
+//      aln.set_optional(optional);
+
+      SequenceAlignment aln(flag, rname, pos, mapq, cigar_string, rnext, pnext, tlen, optional);
       aln.ProcessOptional();
 
       if (qual == "*") {

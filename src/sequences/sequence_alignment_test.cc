@@ -17,8 +17,9 @@ void TEST_CLASS_SEQUENCE_ALIGNMENT() {
 
   std::string cigar_string = "12M3I10=2X10=7D5=25S";
   std::vector<CigarOp> split_ops;
-  SequenceAlignment::SplitCigar(cigar_string, aln.cigar);
+//  SequenceAlignment::SplitCigar(cigar_string, aln.get_cigar());
   SequenceAlignment::SplitCigar(cigar_string, split_ops);
+  aln.SetCigarFromString(cigar_string);
 
   std::vector<CigarOp> test_ops;
   CigarOp op;
@@ -44,28 +45,28 @@ void TEST_CLASS_SEQUENCE_ALIGNMENT() {
   int64_t ref_pos = 0;
   int64_t read_pos = 0;
   read_pos = 14;
-  ref_pos = aln.FindBasePositionOnRef(split_ops, read_pos);
+  ref_pos = aln.FindBasePositionOnRef(read_pos);
   printf ("read_pos = %ld -> ref_pos = %ld\n", read_pos, ref_pos);
   assert(ref_pos == 12);
   read_pos = 27;
-  ref_pos = aln.FindBasePositionOnRef(split_ops, read_pos);
+  ref_pos = aln.FindBasePositionOnRef(read_pos);
   printf ("read_pos = %ld -> ref_pos = %ld\n", read_pos, ref_pos);
   assert(ref_pos == 24);
   read_pos = 37;
-  ref_pos = aln.FindBasePositionOnRef(split_ops, read_pos);
+  ref_pos = aln.FindBasePositionOnRef(read_pos);
   printf ("read_pos = %ld -> ref_pos = %ld\n", read_pos, ref_pos);
   assert(ref_pos == 41);
 
   ref_pos = 14;
-  read_pos = aln.FindBasePositionOnRead(split_ops, ref_pos);
+  read_pos = aln.FindBasePositionOnRead(ref_pos);
   printf ("ref_pos = %ld -> read_pos = %ld\n", ref_pos, read_pos);
   assert(read_pos == 17);
   ref_pos = 27;
-  read_pos = aln.FindBasePositionOnRead(split_ops, ref_pos);
+  read_pos = aln.FindBasePositionOnRead(ref_pos);
   printf ("ref_pos = %ld -> read_pos = %ld\n", ref_pos, read_pos);
   assert(read_pos == 30);
   ref_pos = 37;
-  read_pos = aln.FindBasePositionOnRead(split_ops, ref_pos);
+  read_pos = aln.FindBasePositionOnRead(ref_pos);
   printf ("ref_pos = %ld -> read_pos = %ld\n", ref_pos, read_pos);
   assert(read_pos == 37);
 
