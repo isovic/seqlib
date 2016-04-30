@@ -17,6 +17,10 @@
 #define LOG_NEWLINE         LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL, true, LogSystem::FormatString("\n"), std::string("[]"));
 #define LOG_NOHEADER(...)         LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL, true, LogSystem::FormatString(__VA_ARGS__), std::string("[]"));
 #define LOG_ALL(...)        LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL, true, LogSystem::FormatString(__VA_ARGS__), std::string(__FUNCTION__)); // , std::string(__FILE__), __LINE__);
+#define LOG_MEDHIGH(...)        LogSystem::GetInstance().Log(VERBOSE_LEVEL_MED | VERBOSE_LEVEL_HIGH, true, LogSystem::FormatString(__VA_ARGS__), std::string(__FUNCTION__)); // , std::string(__FILE__), __LINE__);
+#define LOG_MEDHIGH_NOHEADER(...)         LogSystem::GetInstance().Log(VERBOSE_LEVEL_MED | VERBOSE_LEVEL_HIGH, true, LogSystem::FormatString(__VA_ARGS__), std::string("[]"));
+#define LOG_HIGH(...)        LogSystem::GetInstance().Log(VERBOSE_LEVEL_HIGH, true, LogSystem::FormatString(__VA_ARGS__), std::string(__FUNCTION__)); // , std::string(__FILE__), __LINE__);
+#define LOG_HIGH_NOHEADER(...)         LogSystem::GetInstance().Log(VERBOSE_LEVEL_HIGH, true, LogSystem::FormatString(__VA_ARGS__), std::string("[]"));
 #define LOG_DEBUG(...)      LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL_DEBUG, true, LogSystem::FormatString(__VA_ARGS__), std::string(__FUNCTION__), std::string(__FILE__), __LINE__);
 #define LOG_DEBUG_HIGH(...)      LogSystem::GetInstance().Log(VERBOSE_LEVEL_HIGH_DEBUG, true, LogSystem::FormatString(__VA_ARGS__), std::string(__FUNCTION__), std::string(__FILE__), __LINE__);
 #define LOG_DEBUG_NOHEADER(...)      LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL_DEBUG, true, LogSystem::FormatString(__VA_ARGS__), std::string("[]"), std::string(__FILE__), __LINE__);
