@@ -292,6 +292,10 @@ void SequenceAlignment::set_cigar(const std::vector<CigarOp>& cigar) {
   this->cigar_ = cigar;
 }
 
+std::vector<CigarOp>& SequenceAlignment::cigar() {
+  return cigar_;
+}
+
 double SequenceAlignment::get_evalue() const {
   return evalue_;
 }
@@ -322,6 +326,10 @@ const std::vector<std::string>& SequenceAlignment::get_optional() const {
 
 void SequenceAlignment::set_optional(const std::vector<std::string>& optional) {
   this->optional_ = optional;
+}
+
+std::vector<std::string>& SequenceAlignment::optional() {
+  return optional_;
 }
 
 int64_t SequenceAlignment::get_pnext() const {

@@ -24,7 +24,7 @@
 typedef struct {
   char op = '-';
   int32_t count = 0;
-  int64_t pos_ref = -1;
+  int64_t pos_ref = -1;     // Relative to the pos_ field of the corresponding SequenceAlignment object. pos_ref starts from zero, eventhough the actuall alignment starts at an arbitrary position on the reference.
   int64_t pos_query = - 1;
 } CigarOp ;
 
@@ -57,12 +57,13 @@ class SequenceAlignment {
   static int CalcClippedBasesFront(const std::vector<CigarOp>& split_cigar, int64_t &ret_clip_len);
   static int CalcClippedBasesBack(const std::vector<CigarOp>& split_cigar, int64_t &ret_clip_len);
   static std::string MakeCigarString(const std::vector<CigarOp>& split_cigar);
-  static int SplitCigar(const std::string &cigar_str, std::vector<CigarOp>& ret);
+  static int SplitCigar(const std::string &cigar_str, std::vector<CigarOp>& ret);     // pos_on_ref member is relative to the pos_field of the corresponding SequenceAlignment object.
 
   int64_t get_as() const;
   void set_as(int64_t as);
   const std::vector<CigarOp>& get_cigar() const;
   void set_cigar(const std::vector<CigarOp>& cigar);
+  std::vector<CigarOp>& cigar();
   double get_evalue() const;
   void set_evalue(double evalue);
   uint32_t get_flag() const;
@@ -71,6 +72,7 @@ class SequenceAlignment {
   void set_mapq(int32_t mapq);
   const std::vector<std::string>& get_optional() const;
   void set_optional(const std::vector<std::string>& optional);
+  std::vector<std::string>& optional();
   int64_t get_pnext() const;
   void set_pnext(int64_t pnext);
   int64_t get_pos() const;
