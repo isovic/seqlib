@@ -61,6 +61,7 @@ void SequenceFile::Clear() {
   current_batch_id_ = 0;
   current_batch_starting_sequence_id_ = 0;
   open_file_path_ = "";
+  file_header_.clear();
 
   if (bwa_seq_ != NULL) {
     kseq_destroy(bwa_seq_);
@@ -506,6 +507,7 @@ int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_t
   std::string line;
 
   std::string sam_header = "";
+  file_header_.clear();
 
   while (!ReadGZLine_(gzip_fp_, line)) {
     if (line.size() == 0) continue;
@@ -514,6 +516,7 @@ int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_t
 
     if (line[0] == '@') {
       sam_header += line;
+      file_header_.push_back(line);
 
     } else {
       sequence = new SingleSequence();
@@ -581,4 +584,12 @@ int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_t
 
 void SequenceFile::Sort() {
   std::sort(sequences_.begin(), sequences_.end(), seq_sort_key());
+}
+
+const std::vector<std::string>& SequenceFile::get_file_header() const {
+  return file_header_;
+}
+
+void SequenceFile::set_file_header(const std::vector<std::string>& fileHeader) {
+  file_header_ = fileHeader;
 }

@@ -192,6 +192,8 @@ class SequenceFile {
   void set_current_batch_id(uint64_t currentBatchId);
   uint64_t get_current_batch_starting_sequence_id() const;
   void set_current_batch_starting_sequence_id(uint64_t currentBatchStartingSequenceId);
+  const std::vector<std::string>& get_file_header() const;
+  void set_file_header(const std::vector<std::string>& fileHeader);
 
  private:
   SequenceVector sequences_;  // Vector holding all the sequences in the file (or in a batch).
@@ -206,6 +208,7 @@ class SequenceFile {
                                 // using the AddSequence, their size (in bytes)
                                 // is automatically calculated. Used for batch
                                 // loading of fixed size of sequences.
+  std::vector<std::string> file_header_;  // Some file formats also have a header describing the content. Each header line is one entry in the std::vector.
 
   int LoadSeqs_(SequenceFormat seq_file_fmt, int64_t num_seqs_to_load, int64_t megabytes_to_load, bool convert_to_uppercase=true, bool randomize_non_acgt_bases=false);
 

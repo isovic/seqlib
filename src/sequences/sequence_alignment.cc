@@ -100,6 +100,9 @@ int64_t SequenceAlignment::FindBasePositionOnRead(int64_t pos_on_ref, int64_t *c
     return -1;
   }
 
+//  printf ("pos_on_ref = %ld\n", pos_on_ref);
+//  fflush(stdout);
+
 //  int64_t i=0;
 //  for (i=0; i<cigar_.size(); i++) {
 //    char op = cigar_[i].op;
@@ -187,8 +190,14 @@ int64_t SequenceAlignment::FindBasePositionOnRead(int64_t pos_on_ref, int64_t *c
     if (is_cigar_match(op) || is_cigar_del(op)) {
       if (pos_on_ref >= cig_pos_ref && pos_on_ref < (cig_pos_ref + cigar_[i].count)) {
         if (cigar_id != NULL) *cigar_id = i;
-        if (is_cigar_match(op)) { return (cigar_[i].pos_query + (pos_on_ref - cig_pos_ref)); }
-        else { return (cigar_[i].pos_query); }
+        if (is_cigar_match(op)) {
+//          printf ("\nmatch, cig_pos_ref = %ld, cig_pos_ref_end = %ld\n", cig_pos_ref, cig_pos_ref + cigar_[i].count); fflush(stdout);
+          return (cigar_[i].pos_query + (pos_on_ref - cig_pos_ref));
+        }
+        else {
+//          printf ("\nnon-match\n"); fflush(stdout);
+          return (cigar_[i].pos_query);
+        }
       }
     }
   }
@@ -250,7 +259,9 @@ void SequenceAlignment::SetCigarFromString(std::string& cigar_str) {
 std::string SequenceAlignment::MakeCigarString(const std::vector<CigarOp>& split_cigar) {
   std::stringstream ss;
   for (int64_t i=0; i<split_cigar.size(); i++) {
-    ss << split_cigar[i].count << split_cigar[i].op;
+    if (split_cigar[i].count > 0) {
+      ss << split_cigar[i].count << split_cigar[i].op;
+    }
   }
   return ss.str();
 }
