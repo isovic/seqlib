@@ -248,6 +248,16 @@ int64_t SequenceAlignment::FindBasePositionOnRef(int64_t pos_on_read, int64_t *c
   return -2;
 }
 
+void SequenceAlignment::RecalcCigarPositions() {
+  int64_t pos_ref = 0, pos_query = 0;
+  for (int64_t i=0; i<cigar_.size(); i++) {
+    cigar_[i].pos_ref = pos_ref;
+    cigar_[i].pos_query = pos_query;
+    if (is_cigar_ref(cigar_[i].op)) pos_ref += cigar_[i].count;
+    if (is_cigar_read(cigar_[i].op)) pos_query += cigar_[i].count;
+  }
+}
+
 std::string SequenceAlignment::GetCigarString() const {
   return MakeCigarString(cigar_);
 }

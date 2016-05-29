@@ -28,8 +28,8 @@
 #define LOG_DEBUG_SPEC_NO_HEADER(...) LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL_DEBUG, read->get_sequence_id() == parameters->debug_read, LogSystem::FormatString(__VA_ARGS__), std::string("[]"), std::string(__FILE__), __LINE__);
 #define LOG_DEBUG_SPEC_NEWLINE LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL_DEBUG, read->get_sequence_id() == parameters->debug_read, "\n", std::string("[]"));
 
-#define ERROR_REPORT(error_code, ...)   LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(error_code, __VA_ARGS__));
-#define FATAL_REPORT(error_code, ...)   LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(error_code, __VA_ARGS__));
+#define ERROR_REPORT(error_code, ...)   LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(error_code, __VA_ARGS__))
+#define FATAL_REPORT(error_code, ...)   LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(error_code, __VA_ARGS__))
 
 // LogSystem class is used to standardize the error reporting process.
 // Sample usage:

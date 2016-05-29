@@ -49,6 +49,7 @@ class SequenceAlignment {
   int64_t FindBasePositionOnRef(int64_t pos, int64_t *cigar_id=NULL) const;
   std::string GetCigarString() const;
   void SetCigarFromString(std::string &cigar_str);
+  void RecalcCigarPositions();
 
   bool IsMapped() const;
 
