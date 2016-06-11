@@ -177,6 +177,17 @@ class SequenceFile {
   // Returns the sum of number of bases of all the sequences in the file.
   uint64_t GetNumberOfBases();
 
+  // Converts the sequence data between ASCII, 2 bit sparse and 2 bit dense
+  // formats. Sequence data of this object is replaced with the converted
+  // value.
+  // Inputs:
+  //    new_data_format - specifies the data format to which data should
+  //                      be converted to. Can be equal to kDataFormatAscii,
+  //                      kDataFormat2BitSparse or kDataFormat2BitPacked. If
+  //                      conversion to the same format is attempted, warning
+  //                      will be issued and logged.
+  int ConvertDataFormat(DataFormat new_data_format);
+
   // Outputs the contents of this object to the stream given by file pointer.
   // Inputs:
   //    fp  - file pointer to an open file. Can also be stdout and stderr.  void Verbose(FILE *fp);
