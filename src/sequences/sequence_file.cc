@@ -10,6 +10,7 @@
 
 #include "sequences/sequence_file.h"
 #include "log_system/log_system.h"
+#include <map>
 #include <sstream>
 #include <algorithm>
 
@@ -60,6 +61,7 @@ void SequenceFile::Clear() {
   current_batch_id_ = 0;
   current_batch_starting_sequence_id_ = 0;
   open_file_path_ = "";
+  file_header_.clear();
 
   if (bwa_seq_ != NULL) {
     kseq_destroy(bwa_seq_);
@@ -429,6 +431,8 @@ int SequenceFile::LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_t
   SingleSequence *sequence = NULL;
   std::string line;
 
+  std::map<std::string, SingleSequence *> seq_header_map;
+
   while (!ReadGZLine_(gzip_fp_, line)) {
     sequence = new SingleSequence();
 
@@ -454,6 +458,7 @@ int SequenceFile::LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_t
       }
 
       AddSequence(sequence, true);
+      seq_header_map[header] = sequence;  // Hash the sequence by it's name for faster search when adding other GFA lines.
       id += 1;  // Increment the relative sequence id counter.
       id_absolute += 1;
 
@@ -461,6 +466,34 @@ int SequenceFile::LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_t
         break;
       if (megabytes_to_load > 0 && ConvertFromBytes(MEMORY_UNIT_MEGABYTE, current_data_size_) >= megabytes_to_load)  // Batch loading stopping condition.
         break;
+
+    } else if (keyword == "a") {
+      GFAGoldenPath gp;
+      SequenceGFA::ParseGoldenPath(line, gp);
+
+      auto it = seq_header_map.find(gp.utg_name);
+      if (it == seq_header_map.end()) {
+        FATAL_REPORT(ERR_UNEXPECTED_VALUE, "Unitig name not found in previously loaded sequences! utg_name = '%s'", gp.utg_name.c_str());
+      }
+      it->second->gfa().AddGoldenPath(gp);
+
+    } else if (keyword == "L") {
+      GFAOverlap ov;
+      SequenceGFA::ParseOverlap(line, ov);
+
+      auto it1 = seq_header_map.find(ov.seg1_name);
+      if (it1 != seq_header_map.end()) {
+        it1->second->gfa().AddOverlap(ov);
+      }
+
+      auto it2 = seq_header_map.find(ov.seg2_name);
+      if (it2 != seq_header_map.end()) {
+        it2->second->gfa().AddOverlap(ov);
+      }
+
+      if (it1 == seq_header_map.end() || it2 == seq_header_map.end()) {
+        FATAL_REPORT(ERR_UNEXPECTED_VALUE, "Overlap cannot be added to GFA info because either seg1_name or seg2_name cannot be found in the sequences loaded so far. line = '%s'", line.c_str());
+      }
     }
   }
 
@@ -474,6 +507,7 @@ int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_t
   std::string line;
 
   std::string sam_header = "";
+  file_header_.clear();
 
   while (!ReadGZLine_(gzip_fp_, line)) {
     if (line.size() == 0) continue;
@@ -482,6 +516,7 @@ int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_t
 
     if (line[0] == '@') {
       sam_header += line;
+      file_header_.push_back(line);
 
     } else {
       sequence = new SingleSequence();
@@ -556,4 +591,12 @@ int SequenceFile::ConvertDataFormat(DataFormat new_data_format) {
     sequences_[i]->ConvertDataFormat(new_data_format);
   }
   return 0;
+}
+
+const std::vector<std::string>& SequenceFile::get_file_header() const {
+  return file_header_;
+}
+
+void SequenceFile::set_file_header(const std::vector<std::string>& fileHeader) {
+  file_header_ = fileHeader;
 }

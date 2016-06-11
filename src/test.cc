@@ -57,6 +57,20 @@ int main() {
 		printf ("[%ld] front: %ld, back: %ld, CIGAR start: %s, CIGAR end: %s\n", i, samfile.get_sequences()[i]->get_aln().GetClippedBasesFront(), samfile.get_sequences()[i]->get_aln().GetClippedBasesBack(), GetSubstring((char *) cigar.c_str(), 10).c_str(), GetSubstring((char *) (cigar.c_str() + cigar.size() - 10), 10).c_str() );
 	}
 
+	printf ("\n");
+	printf ("Testing the parsing of a sample GFA file.\n");
+	SequenceFile gfafile("sample-data/test.gfa");
+	gfafile.Verbose(stdout);
+  for (int64_t i=0; i<gfafile.get_sequences().size(); i++) {
+    printf ("[%ld] Pos: %d, Qname: '%s'\n", i, gfafile.get_sequences()[i]->get_aln().get_pos(), gfafile.get_sequences()[i]->get_header());
+    auto& gfa = gfafile.get_sequences()[i]->get_gfa();
+    for (int64_t j=0; j<gfa.get_gpath().size(); j++) {
+      printf ("\t%s %ld %s:%ld-%ld %c %ld\n", gfa.get_gpath()[j].utg_name.c_str(), gfa.get_gpath()[j].utg_start, gfa.get_gpath()[j].read_name.c_str(), gfa.get_gpath()[j].read_start, gfa.get_gpath()[j].read_end, gfa.get_gpath()[j].orientation, gfa.get_gpath()[j].inc_len);
+    }
+    printf ("\n");
+  }
+  printf ("\n");
+
 	return 0;
 }
 

@@ -17,6 +17,7 @@
 #include <string>
 #include "sequences/sequence_alignment.h"
 #include "utility/utility_conversion-inl.h"
+#include "sequences/sequence_gfa.h"
 
 enum DataFormat {
   kDataFormatAscii = 0,
@@ -88,6 +89,15 @@ class SingleSequence {
   //  Return:
   //    Returns 0 if successful.
   int InitAlignment(const SequenceAlignment &aln);
+
+  // Sets only the GFA info of the sequence from a given existing
+  // SequenceGFA object.
+  // Inputs:
+  //    gfa  - A SequenceGFA object which will be copied to this.
+  //
+  //  Return:
+  //    Returns 0 if successful.
+  int InitGFA(const SequenceGFA& gfa);
 
   // Sets only the sequence data of a SingleSequence object. If this function
   // is used for data initialization, the SingleSequence object will be marked
@@ -364,6 +374,11 @@ class SingleSequence {
 
   const SequenceAlignment& get_aln() const;
   void set_aln(const SequenceAlignment& aln);
+  SequenceAlignment& aln();
+  void set_data_format(DataFormat dataFormat);
+  const SequenceGFA& get_gfa() const;
+  void set_gfa(const SequenceGFA& gfa);
+  SequenceGFA& gfa();
 
  private:
   // Allocates memory needed for storing the data, and copies values given by
@@ -400,6 +415,7 @@ class SingleSequence {
   int8_t *data_;  // Sequence data which can be stored in any of the supported data formats.
   int8_t *quality_;  // Quality scores, e.g. if FASTQ files were loaded. Otherwise, equal to NULL.
   SequenceAlignment aln_; // In case the sequence was loaded from an alignment file (e.g. SAM, BAM, etc.).
+  SequenceGFA gfa_;       // In case the sequence was loaded from a GFA file, it might contain info such as the layout path or overlap information.
 
   uint32_t header_length_;  // Length of the header, should be equal to strlen(header_).
   uint64_t data_length_;  // Length of the data container. If data is in ASCII format, then data_length_ equals sequence_length_, otherwise the number of bytes the data is stored in. I.e. in 2bit format, it would be ceil(sequence_length_ / 4).

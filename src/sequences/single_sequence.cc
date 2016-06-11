@@ -458,6 +458,11 @@ int SingleSequence::InitAlignment(const SequenceAlignment& aln) {
   return 0;
 }
 
+int SingleSequence::InitGFA(const SequenceGFA& gfa) {
+  gfa_.CopyFrom(gfa);
+  return 0;
+}
+
 std::string SingleSequence::MakeSAMLine() const {
   std::stringstream ss;
   if (aln_.get_flag() & 4) {
@@ -615,6 +620,7 @@ void SingleSequence::CopyFrom(const SingleSequence &op1) {
   this->sequence_absolute_id_ = op1.sequence_absolute_id_;
   this->data_format_ = op1.data_format_;
   this->InitAlignment(op1.aln_);
+  this->InitGFA(op1.gfa_);
 }
 
 int8_t * SingleSequence::GetReverseComplement() const {
@@ -894,6 +900,14 @@ void SingleSequence::set_aln(const SequenceAlignment& aln) {
   aln_ = aln;
 }
 
+SequenceAlignment& SingleSequence::aln() {
+  return aln_;
+}
+
+SequenceGFA& SingleSequence::gfa() {
+  return gfa_;
+}
+
 std::string SingleSequence::TrimStringToFirstSpace_(std::string original_string) const {
   std::string::size_type loc = original_string.find(" ", 0);
   if (loc != std::string::npos) {
@@ -904,4 +918,16 @@ std::string SingleSequence::TrimStringToFirstSpace_(std::string original_string)
     return original_string;
   }
   return std::string("");
+}
+
+void SingleSequence::set_data_format(DataFormat dataFormat) {
+  data_format_ = dataFormat;
+}
+
+const SequenceGFA& SingleSequence::get_gfa() const {
+  return gfa_;
+}
+
+void SingleSequence::set_gfa(const SequenceGFA& gfa) {
+  gfa_ = gfa;
 }

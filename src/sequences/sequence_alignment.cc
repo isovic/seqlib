@@ -100,22 +100,128 @@ int64_t SequenceAlignment::FindBasePositionOnRead(int64_t pos_on_ref, int64_t *c
     return -1;
   }
 
-  int64_t i=0;
-  for (i=0; i<cigar_.size(); i++) {
+//  printf ("pos_on_ref = %ld\n", pos_on_ref);
+//  fflush(stdout);
+
+//  int64_t i=0;
+//  for (i=0; i<cigar_.size(); i++) {
+//    char op = cigar_[i].op;
+//    int64_t cig_pos_ref = cigar_[i].pos_ref + aligned_pos;
+//    if (is_cigar_match(op) || is_cigar_del(op)) {
+//      if (pos_on_ref >= cig_pos_ref && pos_on_ref < (cig_pos_ref + cigar_[i].count)) {
+//        if (cigar_id != NULL) *cigar_id = i;
+//        if (is_cigar_match(op)) { return (cigar_[i].pos_query + (pos_on_ref - cig_pos_ref)); }
+//        else { return (cigar_[i].pos_query); }
+//      }
+//    }
+//  }
+//
+////  int64_t ref_len;
+////  CalcReferenceLengthFromCigar(split_cigar, ref_len);
+////  fprintf (stderr, "WARNING: i = %ld, split_cigar.size() = %ld, pos_on_ref = %ld, pos = %ld, length_on_ref = %ld, end_on_ref = %ld\n", i, split_cigar.size(), pos_on_ref, (pos - 1), ref_len, (pos - 1 + ref_len - 1));
+//  return -2;
+
+  int64_t left = 0;
+  int64_t right = cigar_.size() - 1;
+  int64_t found_op_id = -1;
+//  printf ("\n");
+  while (left <= right) {
+    int64_t mid = (left + right) / 2;
+//    printf ("  mid = %ld, first = %ld, last = %ld, cigar_[mid].pos_ref = %ld, cigar_[left].pos_ref = %ld, cigar_[right].pos_ref = %ld\n", mid, left, right, cigar_[mid].pos_ref, cigar_[left].pos_ref, cigar_[right].pos_ref);
+    if (pos_on_ref < (cigar_[mid].pos_ref + aligned_pos)) {
+      right = mid - 1;
+//      printf ("    -> right = mid - 1\n");
+    } else if (pos_on_ref >= (cigar_[mid].pos_ref + aligned_pos) && pos_on_ref < (cigar_[mid].pos_ref + aligned_pos + cigar_[mid].count)) { // Note, this might find insertions as well! Insertions are not bases on the reference, we need to handle this case below.
+//    } else if (pos_on_ref >= (cigar_[mid].pos_ref + aligned_pos) &&
+//        ((cigar_[mid].op == 'I' && pos_on_ref == (cigar_[mid].pos_ref + aligned_pos)) ||
+//          (is_cigar_ref(cigar_[mid].op) && pos_on_ref < (cigar_[mid].pos_ref + aligned_pos + cigar_[mid].count)))) {
+//      printf ("found! pos_on_ref = %ld, cigar_[mid].pos_ref + aligned_pos = %ld, (cigar_[mid].pos_ref + aligned_pos + cigar_[mid].count) = %ld\n", pos_on_ref, cigar_[mid].pos_ref + aligned_pos, (cigar_[mid].pos_ref + aligned_pos + cigar_[mid].count));
+      found_op_id = mid;
+//      printf ("    -> found!\n");
+      break;
+    } else {
+      left = mid + 1;
+//      printf ("    -> left = mid + 1\n");
+    }
+  }
+  if (left > right || found_op_id < 0) {
+    // Not found.
+//    printf ("\nTu sam 1!\nleft = %ld, right = %ld, found_op_id = %ld\npos_on_ref = %ld\n", left, right, found_op_id, pos_on_ref);
+//    printf ("aligned_pos = %ld\n", aligned_pos);
+//    for (int64_t i=0; i<cigar_.size(); i++) {
+//      printf ("[%ld] %c %d, %ld, %ld\n", i, cigar_[i].op, cigar_[i].count, cigar_[i].pos_query, cigar_[i].pos_ref + aligned_pos);
+//    }
+//    fflush(stdout);
+    return -2;
+  }
+  int64_t found_m_op = -1;
+  int64_t ops_start = found_op_id, ops_end = found_op_id + 1;
+  // Be conservative, and expand the cigar op range a bit to the left. This compensates for the insertions in the binary search.
+  for (int64_t i=found_op_id; i>=0; i--) {
+    int64_t cig_pos_ref = cigar_[i].pos_ref + aligned_pos;
+//    if (pos_on_ref >= (cig_pos_ref) && pos_on_ref < (cig_pos_ref + cigar_[i].count)) { ops_start = i; }
+//    else { break; }
+    if (cig_pos_ref < pos_on_ref) { break; }
+    ops_start = i;
+  }
+  // Be conservative, and expand the cigar op range a bit to the right. This compensates for the insertions in the binary search.
+  for (int64_t i=(found_op_id+1); i<cigar_.size(); i++) {
+    int64_t cig_pos_ref = cigar_[i].pos_ref + aligned_pos;
+    if (cig_pos_ref > pos_on_ref) { break; }
+    ops_end = (i + 1);
+//    if (pos_on_ref >= (cig_pos_ref) && pos_on_ref < (cig_pos_ref + cigar_[i].count)) { ops_end = (i + 1); }
+//    else { break; }
+
+//    if ((cigar_[i].pos_ref + aligned_pos) == pos_on_ref) {
+//      ops_end = (i + 1);
+//      if (ops_start == 505) {
+//      printf ("Tu sam 2!\n");
+//      fflush(stdout);
+//      printf ("ops_end = %ld\n", ops_end);
+//      exit(1);
+//      }
+//    }
+//    else { break; }
+  }
+
+  for (int64_t i=ops_start; i<ops_end; i++) {
     char op = cigar_[i].op;
     int64_t cig_pos_ref = cigar_[i].pos_ref + aligned_pos;
     if (is_cigar_match(op) || is_cigar_del(op)) {
       if (pos_on_ref >= cig_pos_ref && pos_on_ref < (cig_pos_ref + cigar_[i].count)) {
         if (cigar_id != NULL) *cigar_id = i;
-        if (is_cigar_match(op)) { return (cigar_[i].pos_query + (pos_on_ref - cig_pos_ref)); }
-        else { return (cigar_[i].pos_query); }
+        if (is_cigar_match(op)) {
+//          printf ("\nmatch, cig_pos_ref = %ld, cig_pos_ref_end = %ld\n", cig_pos_ref, cig_pos_ref + cigar_[i].count); fflush(stdout);
+          return (cigar_[i].pos_query + (pos_on_ref - cig_pos_ref));
+        }
+        else {
+//          printf ("\nnon-match\n"); fflush(stdout);
+          return (cigar_[i].pos_query);
+        }
       }
     }
   }
-//  int64_t ref_len;
-//  CalcReferenceLengthFromCigar(split_cigar, ref_len);
-//  fprintf (stderr, "WARNING: i = %ld, split_cigar.size() = %ld, pos_on_ref = %ld, pos = %ld, length_on_ref = %ld, end_on_ref = %ld\n", i, split_cigar.size(), pos_on_ref, (pos - 1), ref_len, (pos - 1 + ref_len - 1));
+
+//  printf ("Whaaat!?\n");
+//  fflush(stdout);
+//
+//  printf ("ops_start = %ld, ops_end = %ld\n", ops_start, ops_end);
+//
+//  printf ("\nTu sam 1!\nleft = %ld, right = %ld, found_op_id = %ld\npos_on_ref = %ld\n", left, right, found_op_id, pos_on_ref);
+//  printf ("aligned_pos = %ld\n", aligned_pos);
+//  for (int64_t i=0; i<cigar_.size(); i++) {
+//    printf ("[%ld] %c %d, %ld, %ld\n", i, cigar_[i].op, cigar_[i].count, cigar_[i].pos_query, cigar_[i].pos_ref + aligned_pos);
+//  }
+//  fflush(stdout);
+
   return -2;
+
+//    if (cigar_[i].pos_ref == pos_on_ref &&
+//        (is_cigar_match(cigar_[i].op)) &&
+//        (found_m_op == -1 || i < found_m_op)) {
+////      found_m_op = i;
+//    }
+//  }
 }
 
 int64_t SequenceAlignment::FindBasePositionOnRef(int64_t pos_on_read, int64_t *cigar_id) const {
@@ -142,6 +248,16 @@ int64_t SequenceAlignment::FindBasePositionOnRef(int64_t pos_on_read, int64_t *c
   return -2;
 }
 
+void SequenceAlignment::RecalcCigarPositions() {
+  int64_t pos_ref = 0, pos_query = 0;
+  for (int64_t i=0; i<cigar_.size(); i++) {
+    cigar_[i].pos_ref = pos_ref;
+    cigar_[i].pos_query = pos_query;
+    if (is_cigar_ref(cigar_[i].op)) pos_ref += cigar_[i].count;
+    if (is_cigar_read(cigar_[i].op)) pos_query += cigar_[i].count;
+  }
+}
+
 std::string SequenceAlignment::GetCigarString() const {
   return MakeCigarString(cigar_);
 }
@@ -153,7 +269,9 @@ void SequenceAlignment::SetCigarFromString(std::string& cigar_str) {
 std::string SequenceAlignment::MakeCigarString(const std::vector<CigarOp>& split_cigar) {
   std::stringstream ss;
   for (int64_t i=0; i<split_cigar.size(); i++) {
-    ss << split_cigar[i].count << split_cigar[i].op;
+    if (split_cigar[i].count > 0) {
+      ss << split_cigar[i].count << split_cigar[i].op;
+    }
   }
   return ss.str();
 }
@@ -195,6 +313,10 @@ void SequenceAlignment::set_cigar(const std::vector<CigarOp>& cigar) {
   this->cigar_ = cigar;
 }
 
+std::vector<CigarOp>& SequenceAlignment::cigar() {
+  return cigar_;
+}
+
 double SequenceAlignment::get_evalue() const {
   return evalue_;
 }
@@ -225,6 +347,10 @@ const std::vector<std::string>& SequenceAlignment::get_optional() const {
 
 void SequenceAlignment::set_optional(const std::vector<std::string>& optional) {
   this->optional_ = optional;
+}
+
+std::vector<std::string>& SequenceAlignment::optional() {
+  return optional_;
 }
 
 int64_t SequenceAlignment::get_pnext() const {
