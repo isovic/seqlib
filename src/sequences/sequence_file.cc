@@ -600,3 +600,12 @@ const std::vector<std::string>& SequenceFile::get_file_header() const {
 void SequenceFile::set_file_header(const std::vector<std::string>& fileHeader) {
   file_header_ = fileHeader;
 }
+
+bool SequenceFile::HasQV() {
+  for (int64_t i=0; i<sequences_.size(); i++) {
+    if (sequences_[i]->get_quality() == NULL || sequences_[i]->get_quality_length() == 0) {
+      return false;
+    }
+  }
+  return true;
+}

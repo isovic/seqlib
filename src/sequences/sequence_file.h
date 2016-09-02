@@ -188,6 +188,9 @@ class SequenceFile {
   //                      will be issued and logged.
   int ConvertDataFormat(DataFormat new_data_format);
 
+  // Checks if the sequences in the SequenceFile have quality values stored in them.
+  bool HasQV();
+
   // Outputs the contents of this object to the stream given by file pointer.
   // Inputs:
   //    fp  - file pointer to an open file. Can also be stdout and stderr.  void Verbose(FILE *fp);
