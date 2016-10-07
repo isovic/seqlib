@@ -424,12 +424,12 @@ std::string ConvertToBinary(uint64_t decimal) {
     num_digits += 1;
   }
 
-  if (ss.str().size() < (64 + 15) && (num_digits) % 4 == 0)
+  if (ss.tellp() < (64 + 15) && (num_digits) % 4 == 0)
     ss << " ";
 
-  while (ss.str().size() < (64 + 15)) {
+  while (ss.tellp() < (64 + 15)) {
     ss << '0';
-    if (ss.str().size() < (64 + 15) && (num_digits + 1) % 4 == 0)
+    if (ss.tellp() < (64 + 15) && (num_digits + 1) % 4 == 0)
       ss << " ";
     num_digits += 1;
   }
