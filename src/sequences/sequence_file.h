@@ -196,6 +196,12 @@ class SequenceFile {
   //    fp  - file pointer to an open file. Can also be stdout and stderr.  void Verbose(FILE *fp);
   void Verbose(FILE *fp);
 
+  // Formats a SAM header based on the sequences present in the SequenceFile.
+  // Parameters:
+  //   @program_name If not an empty string, a PG line will be output to the header.
+  //   @cmd_line The command line used to run the program, if an empty string the CL parameter of the PG line will be omitted, otherwise it will be included in the generated header.
+  std::string GenerateSAMHeader(std::string program_name="", std::string cmd_line="");
+
   // Sorts sequences ascending in this order: 1. position
   void Sort();
 

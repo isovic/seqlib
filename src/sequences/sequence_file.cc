@@ -609,3 +609,44 @@ bool SequenceFile::HasQV() {
   }
   return true;
 }
+
+std::string SequenceFile::GenerateSAMHeader(std::string program_name, std::string cmd_line) {
+  // Output reference sequence information.
+  std::stringstream ss_header;
+
+  ss_header << "@HD\t" <<
+               "VN:1.0\t" <<
+               "SO:unknown\t" <<
+               "\n";
+
+  for (int64_t reference_id=0; reference_id<sequences_.size(); reference_id++) {
+    std::string reference_header = sequences_[reference_id]->get_header();
+    uint64_t reference_length = (uint64_t) sequences_[reference_id]->get_sequence_length();
+
+    // Trim the header to first space.
+    std::string::size_type loc = reference_header.find(" ", 0);
+    if (loc != std::string::npos) {
+      reference_header = reference_header.substr(0, loc);
+    } else {
+      // There are no spaces in the reference header, do nothing and just report it as is.
+    }
+
+    ss_header << "@SQ\t" <<
+                "SN:" << reference_header << "\t" <<
+                "LN:" << reference_length << "" <<
+                "\n";
+  }
+
+  if (program_name != "") {
+    // Output the command line used to run the process to the file.
+    ss_header << "@PG\t" <<
+                 "ID:" << program_name << "\t" <<
+                 "PN:" << program_name;
+    if (cmd_line != "") {
+      ss_header << "\t" << "CL:" << cmd_line;
+    }
+    ss_header << "\n";
+  }
+
+  return ss_header.str();
+}
