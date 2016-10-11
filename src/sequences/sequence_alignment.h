@@ -21,12 +21,17 @@
 #define is_cigar_ref(x)  (x == 'M' || x == '=' || x == 'X' || x == 'D')
 #define is_cigar_read(x)  (x == 'M' || x == '=' || x == 'X' || x == 'I' || x == 'S')
 
-typedef struct {
+class CigarOp {
+ public:
   char op = '-';
   int32_t count = 0;
   int64_t pos_ref = -1;     // Relative to the pos_ field of the corresponding SequenceAlignment object. pos_ref starts from zero, eventhough the actuall alignment starts at an arbitrary position on the reference.
   int64_t pos_query = - 1;
-} CigarOp ;
+
+  CigarOp() { }
+  CigarOp(char _op, int32_t _count, int64_t _pos_ref, int64_t _pos_query) : op(_op), count(_count), pos_ref(_pos_ref), pos_query(_pos_query) { }
+
+};
 
 class SequenceAlignment {
  public:
