@@ -26,7 +26,7 @@
 
 #include "sequences/kseq.h"
 
-#define SeqFmtToString(x) (x == "fasta" || x == "fastq" || x == "fa" || x == "fq" || x == "fasta.gz" || x == "fastq.gz" || x == "fa.gz" || x == "fq.gz") ? (SEQ_FORMAT_FASTQ) : \
+#define SeqFmtToString(x) (x == "fasta" || x == "fastq" || x == "fa" || x == "fq" || x == "fna" || x == "fasta.gz" || x == "fastq.gz" || x == "fa.gz" || x == "fq.gz") ? (SEQ_FORMAT_FASTQ) : \
         (x == "gfa" || x == "gfa.gz") ? (SEQ_FORMAT_GFA) : \
         (x == "sam" || x == "sam.gz") ? (SEQ_FORMAT_SAM) : (x == "auto") ? (SEQ_FORMAT_AUTO) : (SEQ_FORMAT_UNKNOWN)
 
