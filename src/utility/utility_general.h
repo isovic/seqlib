@@ -95,7 +95,8 @@ std::string FormatStringToLength(std::string original_string, uint32_t length);
 void PrintSubstring(char *text, int64_t length, FILE *fp=stdout);
 std::string GetSubstring(char *text, int64_t length);
 unsigned char* CreateReverseCopy(const unsigned char* seq, uint64_t length);
-std::string TrimToFirstSpace(std::string original_string);
+std::string TrimToFirstSpace(const std::string &original_string);
+std::string TrimToFirstDelimiter(const std::string &original_string, char delimiter);
 
 // Calculates the sigmoid function with given parameters.
 // S(t) = 1.0f / (1.0f + exp(-t));

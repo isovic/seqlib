@@ -309,8 +309,12 @@ unsigned char* CreateReverseCopy(const unsigned char* seq, uint64_t length) {
     return reverse_seq;
 }
 
-std::string TrimToFirstSpace(std::string original_string) {
-  std::string::size_type loc = original_string.find(" ", 0);
+std::string TrimToFirstSpace(const std::string &original_string) {
+  return TrimToFirstDelimiter(original_string, ' ');
+}
+
+std::string TrimToFirstDelimiter(const std::string &original_string, char delimiter) {
+  std::string::size_type loc = original_string.find(delimiter, 0);
   if (loc != std::string::npos) {
     return original_string.substr(0, loc);
 
