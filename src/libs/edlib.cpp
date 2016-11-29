@@ -828,6 +828,7 @@ static int myersCalcEditDistanceNW(Word* Peq, int W, int maxNumBlocks,
             (*subscores)[subscoresIdx].startIdx = startIdx;
             (*subscores)[subscoresIdx].length = length;
             (*subscores)[subscoresIdx].scores = scores;
+            (*subscores)[subscoresIdx].columnIdx = c;
 
             subscoreColumnIdx += subscoresDistance;
         }

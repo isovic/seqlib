@@ -133,6 +133,7 @@ typedef enum {
         int startIdx;  // Start index in query, 0-based.
         int length;  // Number of cells in portion of column that is in band.
         int* scores;  // Scores of cells in portion of column that is in band.
+        int columnIdx; // Start index in the target, 0-based.
     } EdlibSubscoreColumn;
 
 
