@@ -505,8 +505,13 @@ std::string SingleSequence::MakeSAMLine() const {
           aln_.get_pnext() << "\t" <<
           aln_.get_tlen() << "\t" <<
           GetSequenceAsString(hard_clip_front, sequence_length_ - hard_clip_back - 1) << "\t";
-    if (quality_ != NULL) ss << (char *) quality_;
-    else ss << "*";
+    if (quality_ != NULL) {
+      // ss << (char *) quality_;
+      ss << GetQualityAsString(hard_clip_front, sequence_length_ - hard_clip_back - 1);
+    } else {
+      ss << "*";
+    }
+
     for (int32_t i=0; i<aln_.get_optional().size(); i++) {
       ss << "\t" << aln_.get_optional()[i];
     }
