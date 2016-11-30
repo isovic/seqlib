@@ -616,7 +616,7 @@ std::string SequenceFile::GenerateSAMHeader(std::string program_name, std::strin
 
   ss_header << "@HD\t" <<
                "VN:1.0\t" <<
-               "SO:unknown\t" <<
+               "SO:unknown" <<
                "\n";
 
   for (int64_t reference_id=0; reference_id<sequences_.size(); reference_id++) {

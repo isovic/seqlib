@@ -491,6 +491,10 @@ std::string SingleSequence::MakeSAMLine() const {
     else ss << "*";
 
   } else {
+    int32_t hard_clip_front = 0, hard_clip_back = 0;
+    if (aln_.get_cigar().size() > 1 && aln_.get_cigar().front().op == 'H') { hard_clip_front = aln_.get_cigar().front().count; }
+    if (aln_.get_cigar().size() > 1 && aln_.get_cigar().back().op == 'H') { hard_clip_back = aln_.get_cigar().back().count; }
+
     ss << TrimStringToFirstSpace_(std::string(header_)) << "\t" <<
           aln_.get_flag() << "\t" <<
           aln_.get_rname() << "\t" <<
@@ -500,7 +504,7 @@ std::string SingleSequence::MakeSAMLine() const {
           aln_.get_rnext() << "\t" <<
           aln_.get_pnext() << "\t" <<
           aln_.get_tlen() << "\t" <<
-          GetSequenceAsString(0, 0) << "\t";
+          GetSequenceAsString(hard_clip_front, sequence_length_ - hard_clip_back - 1) << "\t";
     if (quality_ != NULL) ss << (char *) quality_;
     else ss << "*";
     for (int32_t i=0; i<aln_.get_optional().size(); i++) {
