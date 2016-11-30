@@ -121,6 +121,11 @@ int SingleSequence::InitQuality(int8_t* quality, uint64_t quality_length) {
   if (quality_)
     delete[] quality_;
   quality_ = NULL;
+  quality_length_ = 0;
+
+  if (quality == NULL || quality_length == 0) {
+    return 1;
+  }
 
   quality_ = (int8_t *) new int8_t[quality_length + 1];
 
@@ -143,6 +148,12 @@ int SingleSequence::InitData_(int8_t* data, uint64_t data_length,
   if (data_)
     delete[] data_;
   data_ = NULL;
+  data_length_ = 0;
+  sequence_length_ = 0;
+
+  if (data == NULL || data_length == 0 || sequence_length == 0) {
+    return 1;
+  }
 
   data_ = (int8_t *) new int8_t[data_length + 1];
 
