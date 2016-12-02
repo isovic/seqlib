@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstring>
 #include <cassert>
+#include <stdio.h>
 
 using namespace std;
 
@@ -644,6 +645,9 @@ static int myersCalcEditDistanceNW(Word* Peq, int W, int maxNumBlocks,
 
     if (k < abs(targetLength - queryLength)) {
         *bestScore_ = *position_ = -1;
+        // printf ("\n");
+        // printf ("Tu sam -1!\n");
+        // fflush(stdout);
         return EDLIB_STATUS_OK;
     }
 
@@ -681,16 +685,20 @@ static int myersCalcEditDistanceNW(Word* Peq, int W, int maxNumBlocks,
         *numSubscores = 0;
         *subscores = NULL;
         subscoreColumnIdx = -1;
+        // printf ("\nTu sam -123! subscoresOffset = %d, targetLength = %d\n", subscoresOffset, targetLength); // fflush(stdout);
     } else {
         *numSubscores = 1 + (targetLength - 1 - subscoresOffset) / subscoresDistance;
         *subscores = (EdlibSubscoreColumn*) malloc(*numSubscores * sizeof(EdlibSubscoreColumn));
         subscoreColumnIdx = subscoresOffset;
+        // printf ("\nTu sam -124!\n"); // fflush(stdout);
     }
     //-------------------------------------------------------//
 
     const unsigned char* targetChar = target;
     for (int c = 0; c < targetLength; c++) { // for each column
         Word* Peq_c = Peq + *targetChar * maxNumBlocks;
+//        // printf ("\nc = %d\n", c);
+//        // fflush(stdout);
 
         //----------------------- Calculate column -------------------------//
         int hout = 1;
@@ -787,6 +795,9 @@ static int myersCalcEditDistanceNW(Word* Peq, int W, int maxNumBlocks,
         if (lastBlock < firstBlock) {
             *bestScore_ = *position_ = -1;
             delete[] blocks;
+            // printf ("\n");
+            // printf ("Tu sam 0!\n");
+            // fflush(stdout);
             return EDLIB_STATUS_OK;
         }
         //------------------------------------------------------------------//
@@ -807,7 +818,7 @@ static int myersCalcEditDistanceNW(Word* Peq, int W, int maxNumBlocks,
         //----------------------------------------------------------//
 
         //---- If exact scores for this column are needed, save them ----//
-        if (numSubscores > 0 && c == subscoreColumnIdx) {
+        if (*numSubscores > 0 && c == subscoreColumnIdx) {
             int subscoresIdx = (c - subscoresOffset) / subscoresDistance;
             int startIdx = firstBlock * WORD_SIZE;
             int length = (lastBlock - firstBlock + 1) * WORD_SIZE;
@@ -829,6 +840,9 @@ static int myersCalcEditDistanceNW(Word* Peq, int W, int maxNumBlocks,
             (*subscores)[subscoresIdx].length = length;
             (*subscores)[subscoresIdx].scores = scores;
             (*subscores)[subscoresIdx].columnIdx = c;
+            // printf ("\n");
+            // printf ("Tu sam 1! subscoresIdx = %ld\n", subscoresIdx);
+            // fflush(stdout);
 
             subscoreColumnIdx += subscoresDistance;
         }
@@ -846,6 +860,10 @@ static int myersCalcEditDistanceNW(Word* Peq, int W, int maxNumBlocks,
             *bestScore_ = -1;
             *position_ = targetStopPosition;
             delete[] blocks;
+            // printf ("\n");
+            // printf ("Tu sam 2!\n");
+            // fflush(stdout);
+
             return EDLIB_STATUS_OK;
         }
         //----------------------------------------------------//
@@ -860,14 +878,22 @@ static int myersCalcEditDistanceNW(Word* Peq, int W, int maxNumBlocks,
             *bestScore_ = bestScore;
             *position_ = targetLength - 1;
             delete[] blocks;
+            // printf ("\n");
+            // printf ("Tu sam 3!\n");
+            // printf ("*numSubscores = %d, subscoreColumnIdx = %d\n", *numSubscores, subscoreColumnIdx);
+            // fflush(stdout);
             return EDLIB_STATUS_OK;
         }
     }
 
     *bestScore_ = *position_ = -1;
     delete[] blocks;
+    // printf ("\n");
+    // printf ("Tu sam 4!\n");
+    // fflush(stdout);
     return EDLIB_STATUS_OK;
 }
+
 
 
 /**
