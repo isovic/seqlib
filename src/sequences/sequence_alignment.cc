@@ -11,7 +11,7 @@
 
 SequenceAlignment::SequenceAlignment() {
 //  qname = "";
-  rname_ = rnext_ = "";
+  rname_ = rnext_ = "*";
   flag_ = 4;
   pos_ = pnext_ = tlen_ = as_ = 0;
   mapq_ = 0;
