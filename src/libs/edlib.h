@@ -1,5 +1,5 @@
-#ifndef EDLIB_HEADER_
-#define EDLIB_HEADER_
+#ifndef EDLIB_H_
+#define EDLIB_H_
 
 /**
  * @file
@@ -100,16 +100,6 @@ typedef enum {
          * EDLIB_TASK_PATH - find edit distance, alignment path (and start and end locations of it in target).
          */
         EdlibAlignTask task;
-
-        /**
-         * If subscoresOffset and subscoresDistance are defined, scores for certain columns
-         * of dynamic programming matrix are stored and returned.
-         * First column is the one with index subscoresOffset, and every next column is subscoresDistance away.
-         * Example: if target length is 20, subscoresOffset is 3 and subscoresDistance is 5,
-         * columns with following indices would be returned: 3, 8, 13, 18.
-         */
-        int subscoresOffset;
-        int subscoresDistance;
     } EdlibAlignConfig;
 
     /**
@@ -126,18 +116,6 @@ typedef enum {
 
 
     /**
-     * Scores of a column in dynamic programming matrix.
-     * It contains only scores that are in band.
-     */
-    typedef struct {
-        int startIdx;  // Start index in query, 0-based.
-        int length;  // Number of cells in portion of column that is in band.
-        int* scores;  // Scores of cells in portion of column that is in band.
-        int columnIdx; // Start index in the target, 0-based.
-    } EdlibSubscoreColumn;
-
-
-    /**
      * Container for results of alignment done by edlibAlign() function.
      */
     typedef struct {
@@ -145,7 +123,6 @@ typedef enum {
          * -1 if k is non-negative and edit distance is larger than k.
          */
         int editDistance;
-
         /**
          * Array of zero-based positions in target where optimal alignment paths end.
          * If gap after query is penalized, gap counts as part of query (NW), otherwise not.
@@ -177,26 +154,15 @@ typedef enum {
          * If gaps are not penalized, they are not in alignment.
          * If you do not free whole result object using edlibFreeAlignResult(), do not forget to use free().
          */
-
         unsigned char* alignment;
         /**
          * Length of alignment.
          */
         int alignmentLength;
-
         /**
          * Number of different characters in query and target together.
          */
         int alphabetLength;
-
-        /**
-         * Number of columns from dynamic programming matrix for which we return scores.
-         */
-        int numSubscores;
-        /**
-         * Scores of certain columns from dynamic programming matrix.
-         */
-        EdlibSubscoreColumn* subscores;
     } EdlibAlignResult;
 
     /**
