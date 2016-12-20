@@ -33,13 +33,13 @@ void TEST_CLASS_SEQUENCE_ALIGNMENT() {
   op.op = 'S';  op.count = 25;  test_ops.push_back(op);
 
   assert(split_ops.size() == test_ops.size());
-  for (int32_t i=0; i<test_ops.size(); i++) {
+  for (size_t i=0; i<test_ops.size(); i++) {
     assert(split_ops[i].op == test_ops[i].op);
     assert(split_ops[i].count == test_ops[i].count);
   }
 
-  for (int32_t i=0; i<split_ops.size(); i++) {
-    printf ("%ld %c, read = %ld, ref = %ld\n", split_ops[i].count, split_ops[i].op, split_ops[i].pos_query, split_ops[i].pos_ref);
+  for (size_t i=0; i<split_ops.size(); i++) {
+    printf ("%d %c, read = %ld, ref = %ld\n", split_ops[i].count, split_ops[i].op, split_ops[i].pos_query, split_ops[i].pos_ref);
   }
 
   int64_t ref_pos = 0;

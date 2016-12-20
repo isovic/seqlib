@@ -27,7 +27,7 @@ void ScorerCreateMatrix(Scorer** scorer, char* name, int gapOpen, int gapExtend)
   // scoring matrix. Matrices are stored as 26x26 arrays of ints.
   // This for loop searches for the matrix of a correct name, and returns its index.
   int i;
-  for (i = 0; i < SCORERS_LEN; ++i) {
+  for (i = 0; i < ((int) SCORERS_LEN); ++i) {
     if (strcmp(name, scorers[i].name) == 0) {
       index = i;
       break;
@@ -207,7 +207,7 @@ EValueParams* CreateEValueParams(long long length, Scorer* scorer) {
       index = indexUn;
     }
 
-    ScorerConstants* entry = &(scorerConstants[indexUn]);
+    // ScorerConstants* entry = &(scorerConstants[indexUn]);
 
 //        WARNING(1, "no e-value params found, using %s %d %d", entry->matrix,
 //            entry->gapOpen, entry->gapExtend);

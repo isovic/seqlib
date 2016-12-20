@@ -46,7 +46,7 @@ void SequenceAlignment::CopyFrom(const SequenceAlignment& aln) {
 }
 
 void SequenceAlignment::ProcessOptional() {
-  for (int32_t i=0; i<optional_.size(); i++) {
+  for (size_t i=0; i<optional_.size(); i++) {
     // Optional parameters are split with ':', but on specific characters.
 //    if (optional[i].substr(0, 2) == "AS") {
 //    }
@@ -61,10 +61,10 @@ void SequenceAlignment::ProcessOptional() {
 int SequenceAlignment::SplitCigar(const std::string &cigar_str, std::vector<CigarOp>& ret) {
   ret.clear();
   CigarOp op;
-  int32_t digit_count = 0;
+  // int32_t digit_count = 0;
   int64_t pos_ref = 0, pos_query = 0;
   const char *first_digit = NULL;
-  for (int64_t i=0; i<cigar_str.size(); i++) {
+  for (size_t i=0; i<cigar_str.size(); i++) {
     if (isalpha(cigar_str[i]) || cigar_str[i] == '=') {
       op.pos_ref = pos_ref;
       op.pos_query = pos_query;
@@ -83,7 +83,7 @@ int SequenceAlignment::SplitCigar(const std::string &cigar_str, std::vector<Ciga
 
 int SequenceAlignment::CalcReferenceLengthFromCigar(const std::vector<CigarOp>& split_cigar, int64_t& ret_ref_len) {
   int64_t len = 0;
-  for (int64_t i=0; i<split_cigar.size(); i++) {
+  for (size_t i=0; i<split_cigar.size(); i++) {
     if (is_cigar_ref(split_cigar[i].op)) { len += split_cigar[i].count; }
   }
   ret_ref_len = len;
@@ -154,7 +154,7 @@ int64_t SequenceAlignment::FindBasePositionOnRead(int64_t pos_on_ref, int64_t *c
 //    fflush(stdout);
     return -2;
   }
-  int64_t found_m_op = -1;
+  // int64_t found_m_op = -1;
   int64_t ops_start = found_op_id, ops_end = found_op_id + 1;
   // Be conservative, and expand the cigar op range a bit to the left. This compensates for the insertions in the binary search.
   for (int64_t i=found_op_id; i>=0; i--) {
@@ -165,7 +165,7 @@ int64_t SequenceAlignment::FindBasePositionOnRead(int64_t pos_on_ref, int64_t *c
     ops_start = i;
   }
   // Be conservative, and expand the cigar op range a bit to the right. This compensates for the insertions in the binary search.
-  for (int64_t i=(found_op_id+1); i<cigar_.size(); i++) {
+  for (size_t i=(found_op_id+1); i<cigar_.size(); i++) {
     int64_t cig_pos_ref = cigar_[i].pos_ref + aligned_pos;
     if (cig_pos_ref > pos_on_ref) { break; }
     ops_end = (i + 1);
@@ -230,7 +230,7 @@ int64_t SequenceAlignment::FindBasePositionOnRef(int64_t pos_on_read, int64_t *c
     return -1;
   }
 
-  for (int64_t i=0; i<cigar_.size(); i++) {
+  for (size_t i=0; i<cigar_.size(); i++) {
     char op = cigar_[i].op;
 //    int64_t cig_pos_ref = split_cigar[i].pos_ref + aligned_pos;
     if (is_cigar_match(op)) {
@@ -240,7 +240,7 @@ int64_t SequenceAlignment::FindBasePositionOnRef(int64_t pos_on_read, int64_t *c
       }
     } else if (is_cigar_ins(op)) {
       if (pos_on_read >= cigar_[i].pos_query && pos_on_read < (cigar_[i].pos_query + cigar_[i].count)) {
-        if (cigar_id != NULL) *cigar_id = i;
+        if (cigar_id != NULL) *cigar_id = (int64_t) i;
         return (cigar_[i].pos_ref + aligned_pos);
       }
     }
@@ -250,7 +250,7 @@ int64_t SequenceAlignment::FindBasePositionOnRef(int64_t pos_on_read, int64_t *c
 
 void SequenceAlignment::RecalcCigarPositions() {
   int64_t pos_ref = 0, pos_query = 0;
-  for (int64_t i=0; i<cigar_.size(); i++) {
+  for (size_t i=0; i<cigar_.size(); i++) {
     cigar_[i].pos_ref = pos_ref;
     cigar_[i].pos_query = pos_query;
     if (is_cigar_ref(cigar_[i].op)) pos_ref += cigar_[i].count;
@@ -268,7 +268,7 @@ void SequenceAlignment::SetCigarFromString(std::string& cigar_str) {
 
 std::string SequenceAlignment::MakeCigarString(const std::vector<CigarOp>& split_cigar) {
   std::stringstream ss;
-  for (int64_t i=0; i<split_cigar.size(); i++) {
+  for (size_t i=0; i<split_cigar.size(); i++) {
     if (split_cigar[i].count > 0) {
       ss << split_cigar[i].count << split_cigar[i].op;
     }
@@ -278,7 +278,7 @@ std::string SequenceAlignment::MakeCigarString(const std::vector<CigarOp>& split
 
 int SequenceAlignment::CalcQueryLengthFromCigar(const std::vector<CigarOp>& split_cigar, int64_t& ret_query_len) {
   int64_t len = 0;
-  for (int64_t i=0; i<split_cigar.size(); i++) {
+  for (size_t i=0; i<split_cigar.size(); i++) {
     if (is_cigar_read(split_cigar[i].op)) { len += split_cigar[i].count; }
   }
   ret_query_len = len;
@@ -407,7 +407,7 @@ int64_t SequenceAlignment::GetClippedBasesBack() const {
 
 int SequenceAlignment::CalcClippedBasesFront(const std::vector<CigarOp>& split_cigar, int64_t& ret_clip_len) {
   int64_t clip_len = 0;
-  for (int64_t i=0; i<split_cigar.size(); i++) {
+  for (size_t i=0; i<split_cigar.size(); i++) {
     if (is_cigar_soft(split_cigar[i].op)) { clip_len += split_cigar[i].count; }
     else if (is_cigar_hard(split_cigar[i].op)) { }
     else { break; }

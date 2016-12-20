@@ -253,7 +253,7 @@ std::string LogSystem::GetLocalTime() {
   struct tm * timeinfo;
   time (&rawtime);
   timeinfo = localtime (&rawtime);
-  sprintf(outstr, "%0.2d:%0.2d:%0.2d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+  sprintf(outstr, "%02d:%02d:%02d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
 
   return std::string(outstr);
 }

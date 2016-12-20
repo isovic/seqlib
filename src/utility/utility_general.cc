@@ -60,7 +60,7 @@ std::string GetLocalTime() {
   struct tm * timeinfo;
   time (&rawtime);
   timeinfo = localtime (&rawtime);
-  sprintf(outstr, "%0.2d:%0.2d:%0.2d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+  sprintf(outstr, "%02d:%02d:%02d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
 
   return std::string(outstr);
 }
@@ -337,18 +337,18 @@ int GetClippingOpsFromCigar(const std::string &cigar, char *clip_op_front, int64
     return 1;
 
   int64_t pos_clip_op_front = -1;
-  for (int64_t i=0; i<cigar.size(); i++) {
+  for (size_t i=0; i<cigar.size(); i++) {
     if (!isdigit(cigar[i])) {
       if (cigar[i] == 'S' || cigar[i] == 'H') {
         *clip_op_front = cigar[i];
-        *clip_count_front = atoi(cigar.substr(0, i).c_str());
-        pos_clip_op_front = i;
+        *clip_count_front = atoi(cigar.substr(0, (int64_t) i).c_str());
+        pos_clip_op_front = (int64_t) i;
       }
       break;
     }
   }
 
-  if ((pos_clip_op_front + 1) < cigar.size()) {
+  if ((pos_clip_op_front + 1) < ((int64_t) cigar.size())) {
     if (cigar.back() == 'S' || cigar.back() == 'H') {
       *clip_op_back = cigar.back();
       for (int64_t i=(cigar.size()-2); i>=0; i--) {

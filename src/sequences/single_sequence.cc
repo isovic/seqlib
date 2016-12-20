@@ -512,7 +512,7 @@ std::string SingleSequence::MakeSAMLine() const {
       ss << "*";
     }
 
-    for (int32_t i=0; i<aln_.get_optional().size(); i++) {
+    for (size_t i=0; i<aln_.get_optional().size(); i++) {
       ss << "\t" << aln_.get_optional()[i];
     }
   }
@@ -545,7 +545,7 @@ double SingleSequence::CalcAverageBQ() const {
 
   double ret = 0.0;
 
-  for (int64_t i=0; i<sequence_length_; i++) {
+  for (size_t i=0; i<sequence_length_; i++) {
     ret += ((double) quality_[i] - 33);
   }
   ret /= (double) sequence_length_;
@@ -844,7 +844,7 @@ int SingleSequence::BasesToUppercase() {
   if (data_format_ != kDataFormatAscii)
     return 1;
 
-  for (int64_t i=0; i<data_length_; i++) { data_[i] = kBaseToUpper[data_[i]]; }
+  for (size_t i=0; i<data_length_; i++) { data_[i] = kBaseToUpper[data_[i]]; }
   return 0;
 }
 
@@ -880,7 +880,7 @@ std::string SingleSequence::GetSequenceAsString(uint64_t start, uint64_t end) co
 std::string SingleSequence::GetQualityAsString(uint64_t start, uint64_t end) const {
   std::stringstream ss;
   char *temp = (char *) quality_;
-  for (int64_t i=start; i<end; i++)
+  for (size_t i=start; i<end; i++)
     ss << temp[i];
   return ss.str();
 }

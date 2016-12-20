@@ -70,7 +70,7 @@ void SequenceFile::Clear() {
 }
 
 void SequenceFile::ClearOnlyData() {
-  for (int64_t i=0; i<sequences_.size(); i++) {
+  for (size_t i=0; i<sequences_.size(); i++) {
     if (destroy_seq_[i] == true && sequences_[i]) {
       delete sequences_[i];
     }
@@ -379,15 +379,16 @@ int SequenceFile::LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes
     id += 1;  // Increment the relative sequence id counter.
     id_absolute += 1;
 
-    if (num_seqs_to_load > 0 && id >= num_seqs_to_load)  // Batch loading stopping condition.
+    if (num_seqs_to_load > 0 && ((int64_t) id) >= num_seqs_to_load)  // Batch loading stopping condition.
       break;
-    if (megabytes_to_load > 0 && ConvertFromBytes(MEMORY_UNIT_MEGABYTE, current_data_size_) >= megabytes_to_load)  // Batch loading stopping condition.
+    if (megabytes_to_load > 0 && ((int64_t) ConvertFromBytes(MEMORY_UNIT_MEGABYTE, current_data_size_)) >= megabytes_to_load)  // Batch loading stopping condition.
       break;
   }
 
   if (l == -2)
     return -2;
 
+  // TODO: Return type is int but the value is uint64_t!
   return id;
 }
 
@@ -399,7 +400,7 @@ int SequenceFile::ReadGZLine_(gzFile gzip_fp, std::string &ret) {
   int32_t read_bytes = 0;
   bool ln_end_found = false;
   int32_t ln_end_pos = 0;
-  bool is_eof = false;
+  // bool is_eof = false;
   while ((read_bytes = gzread(gzip_fp, &buff[0], BUFF_SIZE)) > 0) {
     buff[read_bytes] = '\0';
     for (int32_t i=0; i<read_bytes; i++) {
@@ -462,9 +463,9 @@ int SequenceFile::LoadSeqsFromGFA_(int64_t num_seqs_to_load, int64_t megabytes_t
       id += 1;  // Increment the relative sequence id counter.
       id_absolute += 1;
 
-      if (num_seqs_to_load > 0 && id >= num_seqs_to_load)  // Batch loading stopping condition.
+      if (num_seqs_to_load > 0 && ((int64_t) id) >= num_seqs_to_load)  // Batch loading stopping condition.
         break;
-      if (megabytes_to_load > 0 && ConvertFromBytes(MEMORY_UNIT_MEGABYTE, current_data_size_) >= megabytes_to_load)  // Batch loading stopping condition.
+      if (megabytes_to_load > 0 && ((int64_t) ConvertFromBytes(MEMORY_UNIT_MEGABYTE, current_data_size_)) >= megabytes_to_load)  // Batch loading stopping condition.
         break;
 
     } else if (keyword == "a") {
@@ -572,9 +573,9 @@ int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_t
       id += 1;  // Increment the relative sequence id counter.
       id_absolute += 1;
 
-      if (num_seqs_to_load > 0 && id >= num_seqs_to_load)  // Batch loading stopping condition.
+      if (num_seqs_to_load > 0 && ((int64_t) id) >= num_seqs_to_load)  // Batch loading stopping condition.
         break;
-      if (megabytes_to_load > 0 && ConvertFromBytes(MEMORY_UNIT_MEGABYTE, current_data_size_) >= megabytes_to_load)  // Batch loading stopping condition.
+      if (megabytes_to_load > 0 && ((int64_t) ConvertFromBytes(MEMORY_UNIT_MEGABYTE, current_data_size_)) >= megabytes_to_load)  // Batch loading stopping condition.
         break;
     }
   }
@@ -587,7 +588,7 @@ void SequenceFile::Sort() {
 }
 
 int SequenceFile::ConvertDataFormat(DataFormat new_data_format) {
-  for (int64_t i=0; i<sequences_.size(); i++) {
+  for (size_t i=0; i<sequences_.size(); i++) {
     sequences_[i]->ConvertDataFormat(new_data_format);
   }
   return 0;
@@ -602,7 +603,7 @@ void SequenceFile::set_file_header(const std::vector<std::string>& fileHeader) {
 }
 
 bool SequenceFile::HasQV() {
-  for (int64_t i=0; i<sequences_.size(); i++) {
+  for (size_t i=0; i<sequences_.size(); i++) {
     if (sequences_[i]->get_quality() == NULL || sequences_[i]->get_quality_length() == 0) {
       return false;
     }
@@ -619,7 +620,7 @@ std::string SequenceFile::GenerateSAMHeader(std::string program_name, std::strin
                "SO:unknown" <<
                "\n";
 
-  for (int64_t reference_id=0; reference_id<sequences_.size(); reference_id++) {
+  for (int64_t reference_id=0; reference_id<((int64_t) sequences_.size()); reference_id++) {
     std::string reference_header = sequences_[reference_id]->get_header();
     uint64_t reference_length = (uint64_t) sequences_[reference_id]->get_sequence_length();
 
