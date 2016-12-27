@@ -13,6 +13,7 @@
 #include <map>
 #include <sstream>
 #include <algorithm>
+#include <fstream>
 
 //#include "bwa/kseq.h"
 //KSEQ_DECLARE(gzFile)
@@ -650,4 +651,24 @@ std::string SequenceFile::GenerateSAMHeader(std::string program_name, std::strin
   }
 
   return ss_header.str();
+}
+
+int SequenceFile::WriteFASTA(std::string out_file) {
+  if (sequences_.size() == 0) {
+    return 1;
+  }
+
+  std::ofstream fp(out_file);
+  if (!fp) {
+    LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_OPENING_FILE, "Offending variable: fp."));
+    return 1;
+  }
+
+  for (int64_t i=0; i<sequences_.size(); i++) {
+    fp << sequences_[i]->MakeFASTALine() << std::endl;
+  }
+
+  fp.close();
+
+  return 0;
 }

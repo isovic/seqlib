@@ -202,6 +202,9 @@ class SequenceFile {
   //   @cmd_line The command line used to run the program, if an empty string the CL parameter of the PG line will be omitted, otherwise it will be included in the generated header.
   std::string GenerateSAMHeader(std::string program_name="", std::string cmd_line="");
 
+  // Write all sequences to disk in FASTA format.
+  int WriteFASTA(std::string out_file);
+
   // Sorts sequences ascending in this order: 1. position
   void Sort();
 
