@@ -141,6 +141,14 @@ T* reverse_data(const T* data, int64_t data_len) {
   return ret_data;
 }
 
+template <typename T>
+void reverse_data2(const T* data, int64_t data_len, std::vector<T> &ret) {
+  ret.clear();
+  ret.resize(data_len);
+  for (int64_t i=0; i<data_len; i++)
+    ret[i] = data[data_len - i - 1];
+}
+
 /// Reverses an array in place.
 template <typename T>
 void ReverseArray(std::vector<T> & array) {
