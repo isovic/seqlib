@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cassert>
 #include <stdio.h>
+#include <string>
 
 using namespace std;
 
@@ -40,6 +41,9 @@ static const Word HIGH_BIT_MASK = WORD_1 << (WORD_SIZE - 1);  // 100..00
  */
 int edlibAlignmentToCigar(unsigned char* alignment, int alignmentLength,
                           int cigarFormat, char** cigar);
+
+int edlibAlignmentToCigar(unsigned char* alignment, int alignmentLength,
+                          int cigarFormat, std::string &ret_cigar);
 
 int edlibCalcEditDistance(
         const unsigned char* query, int queryLength,
