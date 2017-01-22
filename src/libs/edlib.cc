@@ -167,7 +167,7 @@ EdlibAlignResult edlibAlign(const char* queryOriginal, const int queryLength,
                 for (int i = 0; i < result.numLocations; i++) {
                     int endLocation = result.endLocations[i];
                     int bestScoreSHW, numPositionsSHW;
-                    int* positionsSHW;
+                    int* positionsSHW = NULL;
                     myersCalcEditDistanceSemiGlobal(
                             rPeq, W, maxNumBlocks,
                             rQuery, queryLength, rTarget + targetLength - endLocation - 1, endLocation + 1,
@@ -175,8 +175,12 @@ EdlibAlignResult edlibAlign(const char* queryOriginal, const int queryLength,
                             &bestScoreSHW, &positionsSHW, &numPositionsSHW);
                     // Taking last location as start ensures that alignment will not start with insertions
                     // if it can start with mismatches instead.
-                    result.startLocations[i] = endLocation - positionsSHW[numPositionsSHW - 1];
-                    delete[] positionsSHW;
+                    if (numPositionsSHW > 0) {
+                      result.startLocations[i] = endLocation - positionsSHW[numPositionsSHW - 1];
+                    }
+                    if (positionsSHW) {
+                      free(positionsSHW);
+                    }
                 }
                 delete[] rTarget;
                 delete[] rQuery;
