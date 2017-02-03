@@ -605,7 +605,7 @@ void SequenceFile::set_file_header(const std::vector<std::string>& fileHeader) {
 
 bool SequenceFile::HasQV() {
   for (size_t i=0; i<sequences_.size(); i++) {
-    if (sequences_[i]->get_quality() == NULL || sequences_[i]->get_quality_length() == 0) {
+    if (!sequences_[i]->HasQV()) {
       return false;
     }
   }

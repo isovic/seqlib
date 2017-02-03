@@ -345,6 +345,9 @@ class SingleSequence {
   // If the sequence does not contain the quality values, the line is formatted as FASTA.
   std::string MakeFASTQLine() const;
 
+  // Return true if the sequence has quality values assigned to it.
+  bool HasQV() const;
+
   // Just sets the pointer of the header_ to header. Does not copy the data.
   void set_header(char *header);
   char *get_header() const;

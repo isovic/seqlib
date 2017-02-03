@@ -951,3 +951,10 @@ const SequenceGFA& SingleSequence::get_gfa() const {
 void SingleSequence::set_gfa(const SequenceGFA& gfa) {
   gfa_ = gfa;
 }
+
+bool SingleSequence::HasQV() const {
+  if (quality_ == NULL || quality_length_ == 0) {
+    return false;
+  }
+  return true;
+}
