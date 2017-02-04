@@ -22,6 +22,7 @@
 #define LOG_HIGH(...)        LogSystem::GetInstance().Log(VERBOSE_LEVEL_HIGH, true, LogSystem::FormatString(__VA_ARGS__), std::string(__FUNCTION__)); // , std::string(__FILE__), __LINE__);
 #define LOG_HIGH_NOHEADER(...)         LogSystem::GetInstance().Log(VERBOSE_LEVEL_HIGH, true, LogSystem::FormatString(__VA_ARGS__), std::string("[]"));
 #define LOG_DEBUG(...)      LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL_DEBUG, true, LogSystem::FormatString(__VA_ARGS__), std::string(__FUNCTION__), std::string(__FILE__), __LINE__);
+#define LOG_DEBUG_MEDHIGH(...)      LogSystem::GetInstance().Log(VERBOSE_LEVEL_MEDHIGH_DEBUG, true, LogSystem::FormatString(__VA_ARGS__), std::string(__FUNCTION__), std::string(__FILE__), __LINE__);
 #define LOG_DEBUG_HIGH(...)      LogSystem::GetInstance().Log(VERBOSE_LEVEL_HIGH_DEBUG, true, LogSystem::FormatString(__VA_ARGS__), std::string(__FUNCTION__), std::string(__FILE__), __LINE__);
 #define LOG_DEBUG_NOHEADER(...)      LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL_DEBUG, true, LogSystem::FormatString(__VA_ARGS__), std::string("[]"), std::string(__FILE__), __LINE__);
 #define LOG_DEBUG_SPEC(...) LogSystem::GetInstance().Log(VERBOSE_LEVEL_ALL_DEBUG, read->get_sequence_id() == parameters->debug_read, LogSystem::FormatString(__VA_ARGS__), std::string(__FUNCTION__), std::string(__FILE__), __LINE__);
@@ -80,6 +81,7 @@ class LogSystem {
 #define VERBOSE_LEVEL_LOW_DEBUG (VERBOSE_LEVEL_LOW | VERBOSE_LEVEL_DEBUG)
 #define VERBOSE_LEVEL_MED_DEBUG (VERBOSE_LEVEL_MED | VERBOSE_LEVEL_DEBUG)
 #define VERBOSE_LEVEL_HIGH_DEBUG (VERBOSE_LEVEL_HIGH | VERBOSE_LEVEL_DEBUG)
+#define VERBOSE_LEVEL_MEDHIGH_DEBUG (VERBOSE_LEVEL_MED | VERBOSE_LEVEL_HIGH | VERBOSE_LEVEL_DEBUG)
 #define VERBOSE_LEVEL_FORCE     1 << 4
 #define VERBOSE_FREQ_LOW        1 << 5
 #define VERBOSE_FREQ_MED        1 << 6
