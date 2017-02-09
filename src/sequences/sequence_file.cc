@@ -672,3 +672,9 @@ int SequenceFile::WriteFASTA(std::string out_file) {
 
   return 0;
 }
+
+int SequenceFile::LoadAll(std::string file_path) {
+  Clear();
+  seq_file_fmt_ = SEQ_FORMAT_AUTO;
+  return LoadAll(seq_file_fmt_, file_path, true);
+}

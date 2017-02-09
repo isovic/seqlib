@@ -653,16 +653,20 @@ int8_t * SingleSequence::GetReverseComplement() const {
   if (data_format_ == kDataFormat2BitPacked) {
     LogSystem::GetInstance().Error(SEVERITY_INT_FATAL, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_NOT_IMPLEMENTED, ""));
     return NULL;
+
+  } else if (data_format_ == kDataFormatAscii) {
+    for (uint64_t current_base = 0; current_base < data_length_; current_base++) {
+      new_data[current_base] = kBaseComplement[data_[data_length_ - current_base - 1]];
+    }
+
+  } else if (data_format_ == kDataFormat2BitSparse) {
+    for (uint64_t current_base = 0; current_base < data_length_; current_base++) {
+      new_data[current_base] = 3 - data_[data_length_ - current_base - 1];
+    }
+
   }
   else {
-    for (uint64_t current_base = 0; current_base < data_length_; current_base++) {
-      if (data_format_ == kDataFormatAscii) {
-        new_data[current_base] = kBaseComplement[data_[data_length_ - current_base - 1]];
-      }
-      else if (data_format_ == kDataFormat2BitSparse) {
-        new_data[current_base] = 3 - data_[data_length_ - current_base - 1];
-      }
-    }
+    FATAL_REPORT(ERR_UNEXPECTED_VALUE, "Unknown data format!\n");
   }
 
   new_data[data_length_] = '\0';

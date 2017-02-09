@@ -120,6 +120,10 @@ class SequenceFile {
   // Return:
   //    Returns 0 if successful.
   int LoadAll(SequenceFormat seq_file_fmt, std::string file_path, bool convert_to_uppercase=true, bool randomize_non_acgt_bases=false);
+
+  // Initializes the object, and calls LoadAll, with the extension of the file_path as the in format.
+  int LoadAll(std::string file_path);
+
   int LoadAllAsBatch(SequenceFormat seq_file_fmt, bool convert_to_uppercase=true, bool randomize_non_acgt_bases=false);
 
   // This function loads only a part of the sequences present in the
