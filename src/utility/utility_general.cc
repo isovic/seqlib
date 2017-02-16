@@ -442,3 +442,12 @@ std::string ConvertToBinary(uint64_t decimal) {
   std::reverse(binary.begin(), binary.end());
   return binary;
 }
+
+bool FileExists(const std::string &path) {
+  FILE *fp = fopen(path.c_str(), "r");
+  if (fp == NULL) {
+    return false;
+  }
+  fclose (fp);
+  return true;
+}

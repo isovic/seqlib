@@ -173,4 +173,6 @@ void FilterFileList(std::vector<std::string> &files, std::vector<std::string> &r
 
 std::string ConvertToBinary(uint64_t decimal);
 
+bool FileExists(const std::string &path);
+
 #endif /* UTILITY_GENERAL_H_ */
