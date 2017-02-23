@@ -101,9 +101,11 @@ std::string LogSystem::GenerateErrorMessage(uint32_t error_type,
   else if (error_type == ERR_WRONG_PARAMS)
     return_message += std::string(
         "Wrong function parameters, or parameters out of bounds!");
-  else if (error_type == ERR_FILE_DEFORMED_FORMAT)
-    return_message += std::string(
-        "Deformed file format, format not following specification.");
+  else if (error_type == ERR_FILE_DEFORMED_FORMAT) {
+    return_message += std::string("Deformed file format, format not following specification.");
+  } else if (error_type == ERR_GENERIC) {
+    return_message += std::string("");
+  }
 
   // Attach the formatted additional message to the end of the return message.
   return_message += (std::string(" ")) + formatted_string;
@@ -153,14 +155,14 @@ int LogSystem::Error(int severity, std::string function, std::string message) {
     ss << severity_lookup[0] << "] ";
 
   ss << message;
-  ss << "In function: '" << function << "'.";
+  ss << " In function: '" << function << "'.";
   ss << "\n";
   // << message;
 
   WriteLog(ss.str(), is_critical);
 
   if (is_critical) {
-    WriteLog(ss.str() + std::string("Exiting."), is_critical);
+//    WriteLog(ss.str() + std::string("Exiting."), is_critical);
     exit(0);
   }
 

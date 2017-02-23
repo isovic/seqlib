@@ -115,5 +115,6 @@ class LogSystem {
 #define ERR_FILE_DEFORMED_FORMAT 12
 #define ERR_FILE_NOT_FOUND      13
 #define ERR_FOLDER_NOT_FOUND    14
+#define ERR_GENERIC    15
 
 #endif /* ERRORHANDLING_H_ */
