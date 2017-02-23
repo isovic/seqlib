@@ -21,6 +21,8 @@
 #include <cassert>
 #include <climits>
 #include <cstdio>
+#include <cstdlib>
+#include <cmath>
 #include <limits>
 #include <vector>
 
