@@ -3,3 +3,5 @@ obj_debug/
 obj_mac/
 bin/
 *.log
+.cproject
+.project

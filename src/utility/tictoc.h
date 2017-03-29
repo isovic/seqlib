@@ -22,7 +22,8 @@ class TicToc {
   double get_secs_current();
 
  private:
-  struct timespec start_, stop_;
+  clock_t start_;
+  clock_t end_;
 };
 
 #endif /* SRC_CONSENSUS_TicToc_H_ */
