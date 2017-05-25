@@ -5,6 +5,7 @@
  *      Author: isovic
  */
 
+
 #include "tictoc.h"
 
 TicToc::TicToc() {
@@ -14,27 +15,24 @@ TicToc::~TicToc() {
 }
 
 void TicToc::start() {
-  clock_gettime(CLOCK_MONOTONIC_RAW, &start_);
+  start_ = clock();
 }
 
 void TicToc::stop() {
-  clock_gettime(CLOCK_MONOTONIC_RAW, &stop_);
+  end_ = clock();
 }
 
 double TicToc::get_secs() {
-  double delta_us = (stop_.tv_sec - start_.tv_sec) * 1000000.0 + (stop_.tv_nsec - start_.tv_nsec) / 1000.0;
-  return delta_us / 1000000.0;
+  double elapsed_secs = double(end_ - start_) / CLOCKS_PER_SEC;
+  return elapsed_secs;
 }
 
 double TicToc::get_msecs() {
-  double delta_us = (stop_.tv_sec - start_.tv_sec) * 1000000.0 + (stop_.tv_nsec - start_.tv_nsec) / 1000.0;
-  return delta_us / 1000.0;
+  double elapsed_secs = double(end_ - start_) / CLOCKS_PER_SEC;
+  return elapsed_secs * 1000.0;
 }
 
 double TicToc::get_secs_current() {
-  struct timespec stop;
-  clock_gettime(CLOCK_MONOTONIC_RAW, &stop);
-
-  double delta_us = (stop.tv_sec - start_.tv_sec) * 1000000.0 + (stop.tv_nsec - start_.tv_nsec) / 1000.0;
-  return delta_us / 1000000.0;
+  double elapsed_secs = double(clock() - start_) / CLOCKS_PER_SEC;
+  return elapsed_secs;
 }

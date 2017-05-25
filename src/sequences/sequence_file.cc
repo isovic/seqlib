@@ -271,8 +271,8 @@ uint64_t SequenceFile::CalculateTotalSize(int32_t memory_unit) {
 void SequenceFile::Verbose(FILE *fp) {
   fprintf (fp, "Num sequences: %ld\n", sequences_.size());
   fprintf (fp, "Currently open file (only when batch loading): '%s'\n", open_file_path_.c_str());
-  fprintf (fp, "Current batch ID: %ld\n", current_batch_id_);
-  fprintf (fp, "Current batch starting sequence ID: %ld\n", current_batch_starting_sequence_id_);
+  fprintf (fp, "Current batch ID: %lld\n", current_batch_id_);
+  fprintf (fp, "Current batch starting sequence ID: %lld\n", current_batch_starting_sequence_id_);
 
   fprintf (fp, "\n");
 

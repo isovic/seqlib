@@ -299,7 +299,7 @@ uint64_t SingleSequence::CalculateTotalSize(SFMemoryUnit memory_unit) {
 
 void SingleSequence::Verbose(FILE *fp) const {
 
-  fprintf(fp, "Sequence ID: %ld\n", sequence_id_);
+  fprintf(fp, "Sequence ID: %lld\n", sequence_id_);
 
   if (data_format_ == kDataFormatAscii)
     fprintf(fp, "Data format: ASCII\n");
