@@ -9,6 +9,7 @@
 #include <math.h>
 #include "utility/evalue.h"
 #include "log_system/log_system.h"
+#include <limits>
 
 /* Short usage instructions:
  * Scorer *scorer;
@@ -280,6 +281,9 @@ int CalculateEValueDNA(int64_t alignment_score, int64_t query_length, int64_t ta
   double logK = eValueParams->logK;
 
   *ret_evalue = (double) query_length * target_length * exp(-lambda * alignment_score + logK);
+  if (*ret_evalue > std::numeric_limits<float>::max()) {
+    *ret_evalue = std::numeric_limits<float>::max();
+  }
 
   return 0;
 }
