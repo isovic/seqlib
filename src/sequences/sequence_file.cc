@@ -353,10 +353,10 @@ int SequenceFile::LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes
       header += std::string(" ") + std::string(bwa_seq_->comment.s);
 
     if (!bwa_seq_->qual.l) {  // If bwa_seq_->qual.l is equal to 0, then we are loading a FASTA file. In this case, only header and data need to be initialized.
-      sequence->InitHeaderAndDataFromAscii((char *) header.c_str(),
+        sequence->InitHeaderAndDataFromAscii((char *) header.c_str(),
                                                 header.length(),
                                                 (int8_t *) bwa_seq_->seq.s,
-                                                bwa_seq_->seq.l, id, id_absolute);
+                                                bwa_seq_->seq.l, id, id_absolute, translateUtoT);
     } else {  // If we got here, we are loading a FASTQ file. All three components (header, data and quality scores) need to be initialized.
       if (bwa_seq_->seq.l != bwa_seq_->qual.l) {
         LogSystem::GetInstance().Error(SEVERITY_INT_ERROR, __FUNCTION__, LogSystem::GetInstance().GenerateErrorMessage(ERR_FILE_DEFORMED_FORMAT, "Quality length not equal to sequence length in FASTQ file! Batch ID: %ld. Absolute sequence ID: %ld. Relative sequence ID: %ld. Skipping rest of the file.", current_batch_id_, (current_batch_starting_sequence_id_ + id), id));
@@ -366,7 +366,7 @@ int SequenceFile::LoadSeqsFromFastq_(int64_t num_seqs_to_load, int64_t megabytes
 
       sequence->InitAllFromAscii((char *) header.c_str(), header.length(),
                                       (int8_t *) bwa_seq_->seq.s,
-                                      (int8_t *) bwa_seq_->qual.s, bwa_seq_->seq.l, id, id_absolute);
+                                      (int8_t *) bwa_seq_->qual.s, bwa_seq_->seq.l, id, id_absolute, translateUtoT);
     }
 
     if (randomize_non_acgt_bases == true) {

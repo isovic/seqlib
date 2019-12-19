@@ -108,7 +108,7 @@ class SingleSequence {
   //    sequence_length - length of the sequence (number of bases).
   //  Return:
   //    Returns 0 if successful.
-  int InitDatafromAscii(int8_t *data, uint64_t sequence_length);
+  int InitDatafromAscii(int8_t *data, uint64_t sequence_length, bool translateUtoT = false);
 
   // Sets only the sequence data of a SingleSequence object. If this function
   // is used for data initialization, the SingleSequence object will be marked
@@ -163,7 +163,7 @@ class SingleSequence {
   //    Returns 0 if successful.
   int InitHeaderAndDataFromAscii(char *header, uint32_t header_length,
                                  int8_t *data, uint64_t data_length,
-                                 int64_t sequence_id = -2, int64_t sequence_absolute_id = -2);
+                                 int64_t sequence_id = -2, int64_t sequence_absolute_id = -2, bool translateUtoT = false);
 
   // Initializes both header and data of a SingleSequence object, setting
   // the object to 2 bit sparse format. The function is implemented by calling the
@@ -221,7 +221,7 @@ class SingleSequence {
   // in the array. This parameter is not necessary, and has a default value of -2.
   int InitAllFromAscii(char *header, uint32_t header_length, int8_t *data,
                        int8_t *quality, uint64_t sequence_length,
-                       int64_t sequence_id = -2, int64_t sequence_absolute_id = -2);
+                       int64_t sequence_id = -2, int64_t sequence_absolute_id = -2, translateUtoT = false);
 
   // Initializes both header and data of a SingleSequence object, setting
   // the object to 2 bit sparse format. The function is implemented by calling
@@ -393,7 +393,7 @@ class SingleSequence {
   //                  format, then data_length = ceil(sequence_length / 4),
   //                  otherwise data_length = sequence_length;
   //    sequence_length - length of the sequence (number of bases).
-  int InitData_(int8_t *data, uint64_t data_length, uint64_t sequence_length);
+  int InitData_(int8_t *data, uint64_t data_length, uint64_t sequence_length, bool translateUtoT = false);
 
   // Converts the sequence data from ASCII to any of supported data formats.
   // Sequence data of this object is replaced with the converted

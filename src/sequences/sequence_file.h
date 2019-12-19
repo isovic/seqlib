@@ -195,6 +195,8 @@ class SequenceFile {
   // Checks if the sequences in the SequenceFile have quality values stored in them.
   bool HasQV();
 
+  bool translateUtoT = false;
+
   // Outputs the contents of this object to the stream given by file pointer.
   // Inputs:
   //    fp  - file pointer to an open file. Can also be stdout and stderr.  void Verbose(FILE *fp);

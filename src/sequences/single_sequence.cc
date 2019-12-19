@@ -144,7 +144,7 @@ int SingleSequence::InitQuality(int8_t* quality, uint64_t quality_length) {
 }
 
 int SingleSequence::InitData_(int8_t* data, uint64_t data_length,
-                              uint64_t sequence_length) {
+                              uint64_t sequence_length, bool translateUtoT) {
   if (data_)
     delete[] data_;
   data_ = NULL;
@@ -169,12 +169,27 @@ int SingleSequence::InitData_(int8_t* data, uint64_t data_length,
   data_length_ = data_length;
   sequence_length_ = sequence_length;
 
+  if(translateUtoT) {
+    int index = 0;
+    int8_t elem = data_[index];
+
+    while(elem != '\0') {
+      elem = data_[index];
+      if(elem == 'U') {
+        data_[index] = elem-1;
+      } else if(elem == 'u') {
+        data_[index] = elem-1;
+      }
+      index += 1;
+    }
+  }
+
   return 0;
 }
 
-int SingleSequence::InitDatafromAscii(int8_t* data, uint64_t sequence_length) {
+int SingleSequence::InitDatafromAscii(int8_t* data, uint64_t sequence_length, bool translateUtoT) {
   data_format_ = kDataFormatAscii;
-  return InitData_(data, sequence_length, sequence_length);
+  return InitData_(data, sequence_length, sequence_length, translateUtoT);
 }
 
 int SingleSequence::InitDataFrom2BitPacked(int8_t* data, uint64_t data_length,
@@ -193,14 +208,14 @@ int SingleSequence::InitHeaderAndDataFromAscii(char *header,
                                                uint32_t header_length,
                                                int8_t* data,
                                                uint64_t data_length,
-                                               int64_t sequence_id, int64_t sequence_absolute_id) {
+                                               int64_t sequence_id, int64_t sequence_absolute_id, bool translateUtoT) {
   if (sequence_id != -2)
     sequence_id_ = sequence_id;
   if (sequence_absolute_id != -2)
     sequence_absolute_id_ = sequence_absolute_id;
 
   return (InitHeader(header, header_length)
-      | InitDatafromAscii(data, data_length));
+      | InitDatafromAscii(data, data_length, translateUtoT));
 }
 
 int SingleSequence::InitHeaderAndDataFrom2BitSparse(char *header,
@@ -235,14 +250,14 @@ int SingleSequence::InitHeaderAndDataFrom2BitPacked(char *header,
 int SingleSequence::InitAllFromAscii(char *header, uint32_t header_length,
                                      int8_t *data, int8_t *quality,
                                      uint64_t sequence_length,
-                                     int64_t sequence_id, int64_t sequence_absolute_id) {
+                                     int64_t sequence_id, int64_t sequence_absolute_id, bool translateUtoT) {
   if (sequence_id != -2)
     sequence_id_ = sequence_id;
   if (sequence_absolute_id != -2)
     sequence_absolute_id_ = sequence_absolute_id;
 
   return (InitHeader(header, header_length)
-      | InitDatafromAscii(data, sequence_length)
+      | InitDatafromAscii(data, sequence_length, translateUtoT)
       | InitQuality(quality, sequence_length));
 }
 
