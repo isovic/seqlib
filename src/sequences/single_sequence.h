@@ -221,7 +221,7 @@ class SingleSequence {
   // in the array. This parameter is not necessary, and has a default value of -2.
   int InitAllFromAscii(char *header, uint32_t header_length, int8_t *data,
                        int8_t *quality, uint64_t sequence_length,
-                       int64_t sequence_id = -2, int64_t sequence_absolute_id = -2, translateUtoT = false);
+                       int64_t sequence_id = -2, int64_t sequence_absolute_id = -2, bool translateUtoT = false);
 
   // Initializes both header and data of a SingleSequence object, setting
   // the object to 2 bit sparse format. The function is implemented by calling
