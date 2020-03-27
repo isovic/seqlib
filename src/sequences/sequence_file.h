@@ -224,6 +224,9 @@ class SequenceFile {
   const std::vector<std::string>& get_file_header() const;
   void set_file_header(const std::vector<std::string>& fileHeader);
 
+  std::vector<std::string> sam_lines;
+  int should_store_sam_lines = false;
+
  private:
   SequenceVector sequences_;  // Vector holding all the sequences in the file (or in a batch).
   std::vector<bool> destroy_seq_; // Since sequences can be added via AddSequence function from the outside, automatic destruction of them could lead to a segfault or a double free problem. This array keeps track which sequences need to be destroyed by the destructor.

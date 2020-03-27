@@ -521,6 +521,9 @@ int SequenceFile::LoadSeqsFromSAM_(int64_t num_seqs_to_load, int64_t megabytes_t
       file_header_.push_back(line);
 
     } else {
+      if(should_store_sam_lines) {
+    	    sam_lines.push_back(line);
+      }
       sequence = new SingleSequence();
       std::istringstream ss(line);
       std::string header;
